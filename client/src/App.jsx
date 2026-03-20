@@ -36,6 +36,29 @@ function AuthProvider({ children }) {
   useEffect(() => {
     async function checkAuth() {
       try {
+        // Check if we're returning from Google OAuth redirect
+        const params = new URLSearchParams(window.location.search);
+        const oauthToken = params.get('_oat');
+
+        if (oauthToken) {
+          // Exchange the one-time token for a proper httpOnly cookie
+          const finalizeRes = await fetch(`${API_BASE_URL}/api/users/auth/finalize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: oauthToken }),
+            credentials: 'include'
+          });
+          if (finalizeRes.ok) {
+            const data = await finalizeRes.json();
+            setUser(data.user);
+            // Clean the token from the URL
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Normal session check via cookie
         const response = await fetch(`${API_BASE_URL}/api/users/me`, {
           credentials: 'include'
         });
