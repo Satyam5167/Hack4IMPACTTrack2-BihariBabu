@@ -66,7 +66,6 @@ let adminAccount = null;
 if (privateKeyString.length > 0) {
     adminAccount = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(adminAccount);
-    console.log(`Admin account set: ${adminAccount.address}`);
 }
 
 const contract = new web3.eth.Contract(contractAbi, contractAddress);

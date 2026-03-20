@@ -32,10 +32,10 @@ export const signup = async (req, res) => {
     );
 
     const token = jwt.sign({ id: newUser.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
-    
+
     // Set cookie
     res.cookie('token', token, cookieOptions);
-    
+
     res.status(201).json({ user: newUser.rows[0] });
   } catch (error) {
     console.error('Signup error:', error);
@@ -62,7 +62,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
-    
+
     // Set cookie
     res.cookie('token', token, cookieOptions);
 
@@ -79,7 +79,7 @@ export const googleLogin = async (req, res) => {
   const FRONTEND_URL = process.env.FRONTEND_URL || 'https://energygr1d.netlify.app';
   // Passport-google-oauth20 attaches the user to req.user
   const user = req.user;
-  
+
   if (!user) {
     return res.redirect(`${FRONTEND_URL}/login?error=auth_failed`);
   }
@@ -87,7 +87,7 @@ export const googleLogin = async (req, res) => {
   try {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.cookie('token', token, cookieOptions);
-    
+
     // Redirect back to dashboard or home
     res.redirect(`${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -203,7 +203,7 @@ export const linkWallet = async (req, res) => {
     // Check if wallet is already linked to someone else
     const existing = await pool.query('SELECT id FROM users WHERE wallet_address = $1', [wallet_address]);
     if (existing.rows.length > 0 && existing.rows[0].id !== req.userId) {
-       return res.status(400).json({ error: 'Wallet already linked to another account' });
+      return res.status(400).json({ error: 'Wallet already linked to another account' });
     }
 
     const updatedUser = await pool.query(
@@ -212,7 +212,7 @@ export const linkWallet = async (req, res) => {
     );
 
     if (updatedUser.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    
+
     res.json({ user: updatedUser.rows[0] });
   } catch (err) {
     console.error('Link wallet error:', err);
