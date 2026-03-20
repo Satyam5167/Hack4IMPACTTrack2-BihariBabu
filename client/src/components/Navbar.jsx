@@ -12,7 +12,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const activePage = location.pathname.includes('marketplace') ? 'marketplace' : 'dashboard';
+  const activePage = location.pathname.includes('marketplace') ? 'marketplace' : location.pathname.includes('ai-forecast') ? 'ai-forecast' : 'dashboard';
 
   useEffect(() => {
     const updateClock = () => {
@@ -89,12 +89,12 @@ export default function Navbar() {
           background: 'var(--bg2)', padding: '4px', borderRadius: '10px',
           border: '1px solid var(--border)' 
         }}>
-          {['Dashboard', 'Marketplace'].map(tab => {
-            const isActive = activePage === tab.toLowerCase();
+          {[{ label: 'Dashboard', path: 'dashboard' }, { label: 'Marketplace', path: 'marketplace' }, { label: 'AI Forecast', path: 'ai-forecast' }].map(tab => {
+            const isActive = activePage === tab.path;
             return (
               <button
-                key={tab}
-                onClick={() => handleNav('/' + tab.toLowerCase())}
+                key={tab.label}
+                onClick={() => handleNav('/' + tab.path)}
                 style={{
                   padding: '6px 20px', borderRadius: '7px', cursor: 'pointer',
                   color: isActive ? 'var(--green)' : 'var(--text2)',
@@ -105,7 +105,7 @@ export default function Navbar() {
                   position: 'relative'
                 }}
               >
-                {tab}
+                {tab.label}
                 {isActive && (
                   <motion.div 
                     layoutId="navTab"
@@ -273,18 +273,18 @@ export default function Navbar() {
               )}
             </div>
 
-            {['Dashboard', 'Marketplace'].map(tab => (
+            {[{ label: 'Dashboard', path: 'dashboard' }, { label: 'Marketplace', path: 'marketplace' }, { label: 'AI Forecast', path: 'ai-forecast' }].map(tab => (
               <button
-                key={tab}
-                onClick={() => handleNav('/' + tab.toLowerCase())}
+                key={tab.label}
+                onClick={() => handleNav('/' + tab.path)}
                 style={{
                   padding: '12px 16px', borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
-                  color: activePage === tab.toLowerCase() ? 'var(--green)' : 'var(--text2)',
+                  color: activePage === tab.path ? 'var(--green)' : 'var(--text2)',
                   fontSize: '14px', fontWeight: 500, border: 'none',
-                  background: activePage === tab.toLowerCase() ? 'rgba(0,255,135,0.06)' : 'var(--card)',
+                  background: activePage === tab.path ? 'rgba(0,255,135,0.06)' : 'var(--card)',
                   fontFamily: 'var(--body)', width: '100%',
                 }}
-              >{tab}</button>
+              >{tab.label}</button>
             ))}
 
             {/* Live badge */}

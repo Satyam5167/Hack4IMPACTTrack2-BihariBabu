@@ -78,3 +78,37 @@ export const getMarketStats = async () => {
   });
   return response.json();
 };
+
+export const updateUserProfile = async (location) => {
+  const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ location }),
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getSolarPanel = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/users/panel`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const upsertSolarPanel = async (data) => {
+  const response = await fetch(`${API_BASE_URL}/api/users/panel`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getForecast = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/forecast`, {
+    credentials: 'include'
+  });
+  return response.json();
+};

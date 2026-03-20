@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from 'passport';
-import { signup, login, googleLogin, walletLogin, linkWallet, getMe, logout } from '../controllers/userController.js';
+import { signup, login, googleLogin, walletLogin, linkWallet, getMe, logout, updateProfile, getSolarPanel, upsertSolarPanel } from '../controllers/userController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -11,6 +11,9 @@ router.post('/google', googleLogin);
 router.post('/wallet', walletLogin);
 router.put('/wallet/link', authenticate, linkWallet);
 router.get('/me', authenticate, getMe);
+router.put('/profile', authenticate, updateProfile);
+router.get('/panel', authenticate, getSolarPanel);
+router.put('/panel', authenticate, upsertSolarPanel);
 router.post('/logout', logout);
 
 // Google OAuth Redirect-based

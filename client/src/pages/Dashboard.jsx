@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import ForecastChart from '../components/ForecastChart';
+import { Sun, Plug, Zap, Leaf, ShoppingCart } from 'lucide-react';
 import Ticker from '../components/Ticker';
 import RecordEnergyModal from '../components/RecordEnergyModal';
 import ListEnergyModal from '../components/ListEnergyModal';
@@ -21,10 +21,8 @@ function AnimatedNumber({ value, format = (v) => v.toFixed(1) }) {
   return <motion.span ref={nodeRef}>{rounded}</motion.span>;
 }
 
-// Remove mock trades
 export default function Dashboard() {
   const { showToast } = useToast();
-  const chartRef = useRef(null);
   const [stats, setStats] = useState({ prod: 0, cons: 0, surplus: 0, co2: 284 });
   const [modalOpen, setModalOpen] = useState(false);
   const [listModalOpen, setListModalOpen] = useState(false);
@@ -80,22 +78,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRealData();
-    // Only simulate chart changes now, the cards are strictly backend-driven
-    const interval = setInterval(() => {
-      if (chartRef.current) {
-        const last = chartRef.current.data.datasets[2].data;
-        last[47] = +(Math.max(0, last[47] + (Math.random() * 0.3 - 0.1)).toFixed(2));
-        chartRef.current.update('none');
-      }
-    }, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const statCards = [
-    { label: 'Solar Production', icon: '☀️', value: stats.prod, unit: 'kWh total', color: 'green' },
-    { label: 'Energy Consumed', icon: '🔌', value: stats.cons, unit: 'kWh total', color: 'blue' },
-    { label: 'Surplus Available', icon: '⚡', value: stats.surplus, unit: 'kWh tradeable', color: 'amber', action: 'List ↗' },
-    { label: 'CO₂ Saved', icon: '🌱', value: Math.floor(stats.co2), unit: 'kg total offset', color: 'teal' },
+    { label: 'Solar Production', icon: Sun,  value: stats.prod,           unit: 'kWh total',      color: 'green' },
+    { label: 'Energy Consumed',  icon: Plug, value: stats.cons,           unit: 'kWh total',      color: 'blue' },
+    { label: 'Surplus Available',icon: Zap,  value: stats.surplus,        unit: 'kWh tradeable',  color: 'amber', action: 'List ↗' },
+    { label: 'CO₂ Saved',        icon: Leaf, value: Math.floor(stats.co2),unit: 'kg total offset', color: 'teal' },
   ];
 
   const colorMap = {
@@ -141,7 +130,7 @@ export default function Dashboard() {
               cursor: 'pointer'
             }}
           >
-            <span style={{ fontSize: '16px' }}>⚡</span>
+            <Zap size={15} />
             Record Today
           </motion.button>
 
@@ -157,7 +146,7 @@ export default function Dashboard() {
               cursor: 'pointer', boxShadow: '0 8px 20px rgba(245,158,11,0.15)'
             }}
           >
-            <span style={{ fontSize: '16px' }}>🛒</span>
+            <ShoppingCart size={15} />
             Sell Surplus
           </motion.button>
         </div>
@@ -182,7 +171,9 @@ export default function Dashboard() {
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', borderRadius: '14px 0 0 14px', background: c.border }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text2)', fontWeight: 500, letterSpacing: '0.4px', textTransform: 'uppercase' }}>{s.label}</span>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', background: c.icon }}>{s.icon}</div>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.icon }}>
+                  <s.icon size={15} color={c.value} />
+                </div>
               </div>
               <div style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '6px', color: c.value }}>
                 {loading ? <div className="skeleton" style={{ width: '80px', height: '26px' }} /> : <AnimatedNumber value={s.value} format={v => i === 3 ? Math.floor(v) : v.toFixed(1)} />}
@@ -219,85 +210,80 @@ export default function Dashboard() {
         })}
       </motion.div>
 
-      {/* Mid Row */}
-      <div className="dash-grid-2" style={{ marginBottom: '20px' }}>
-        <ForecastChart chartRef={chartRef} />
-
-        {/* Right panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Pool Gauge */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 600 }}>Community Pool</span>
-              <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(14,165,233,0.1)', color: 'var(--blue)', border: '1px solid rgba(14,165,233,0.2)' }}>42/50 kWh</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ position: 'relative', width: '140px', height: '80px' }}>
-                <svg width="140" height="80" viewBox="0 0 140 80">
-                  <path d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="var(--border2)" strokeWidth="10" strokeLinecap="round" />
-                  <motion.path
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.5, type: 'spring', bounce: 0, delay: 0.5 }}
-                    d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="173" strokeDashoffset="35"
-                  />
-                  <defs>
-                    <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="var(--green2)" />
-                      <stop offset="100%" stopColor="var(--teal)" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)', lineHeight: 1, fontFamily: 'var(--mono)' }}>84%</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text3)' }}>capacity</div>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '14px', width: '100%' }}>
-                {[
-                  { label: 'Stored', value: '42 kWh', color: 'var(--green)' },
-                  { label: 'Capacity', value: '50 kWh', color: 'var(--text)' },
-                  { label: 'Surplus In', value: '+2.1', color: 'var(--blue)' },
-                  { label: 'Drawn Out', value: '-0.8', color: 'var(--amber)' },
-                ].map(p => (
-                  <div key={p.label} style={{ background: 'var(--bg3)', borderRadius: '8px', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{p.label}</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--mono)', color: p.color }}>{p.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Mid Row — Community Pool + Carbon Impact */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }} className="dash-grid-2">
+        {/* Pool Gauge */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 600 }}>Community Pool</span>
+            <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(14,165,233,0.1)', color: 'var(--blue)', border: '1px solid rgba(14,165,233,0.2)' }}>42/50 kWh</span>
           </div>
-
-          {/* Carbon Impact */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '18px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 600 }}>Carbon Impact</span>
-              <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(0,229,204,0.1)', color: 'var(--teal)', border: '1px solid rgba(0,229,204,0.2)' }}>THIS MONTH</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ position: 'relative', width: '140px', height: '80px' }}>
+              <svg width="140" height="80" viewBox="0 0 140 80">
+                <path d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="var(--border2)" strokeWidth="10" strokeLinecap="round" />
+                <motion.path
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1.5, type: 'spring', bounce: 0, delay: 0.5 }}
+                  d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="173" strokeDashoffset="35"
+                />
+                <defs>
+                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="var(--green2)" />
+                    <stop offset="100%" stopColor="var(--teal)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)', lineHeight: 1, fontFamily: 'var(--mono)' }}>84%</div>
+                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>capacity</div>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', margin: '8px 0' }}>
-              <span style={{ fontSize: '36px', fontWeight: 700, color: 'var(--teal)', letterSpacing: '-1px', fontFamily: 'var(--mono)' }}>
-                <AnimatedNumber value={stats.co2} format={v => Math.floor(v)} />
-              </span>
-              <span style={{ fontSize: '14px', color: 'var(--text2)', marginBottom: '6px' }}>kg CO₂</span>
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '12px' }}>≈ <span style={{ color: 'var(--teal)', fontWeight: 600 }}>{(stats.co2 / 21).toFixed(1)} trees</span> planted equivalent</div>
-            <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Daily savings</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '36px' }}>
-              {[{ h: '50%', d: 'M' }, { h: '65%', d: 'T' }, { h: '45%', d: 'W' }, { h: '80%', d: 'T' }, { h: '70%', d: 'F' }, { h: '55%', d: 'S' }, { h: '90%', d: 'S' }].map((b, idx) => (
-                <motion.div key={idx}
-                  initial={{ height: 0 }}
-                  animate={{ height: b.h }}
-                  transition={{ duration: 0.8, delay: 0.5 + idx * 0.05, type: 'spring' }}
-                  style={{
-                    flex: 1, borderRadius: '3px 3px 0 0',
-                    background: idx === 6 ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
-                    position: 'relative',
-                  }}>
-                  <span style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{b.d}</span>
-                </motion.div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '14px', width: '100%' }}>
+              {[
+                { label: 'Stored', value: '42 kWh', color: 'var(--green)' },
+                { label: 'Capacity', value: '50 kWh', color: 'var(--text)' },
+                { label: 'Surplus In', value: '+2.1', color: 'var(--blue)' },
+                { label: 'Drawn Out', value: '-0.8', color: 'var(--amber)' },
+              ].map(p => (
+                <div key={p.label} style={{ background: 'var(--bg3)', borderRadius: '8px', padding: '10px 12px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{p.label}</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--mono)', color: p.color }}>{p.value}</div>
+                </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Carbon Impact */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '18px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 600 }}>Carbon Impact</span>
+            <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(0,229,204,0.1)', color: 'var(--teal)', border: '1px solid rgba(0,229,204,0.2)' }}>THIS MONTH</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', margin: '8px 0' }}>
+            <span style={{ fontSize: '36px', fontWeight: 700, color: 'var(--teal)', letterSpacing: '-1px', fontFamily: 'var(--mono)' }}>
+              <AnimatedNumber value={stats.co2} format={v => Math.floor(v)} />
+            </span>
+            <span style={{ fontSize: '14px', color: 'var(--text2)', marginBottom: '6px' }}>kg CO₂</span>
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '12px' }}>≈ <span style={{ color: 'var(--teal)', fontWeight: 600 }}>{(stats.co2 / 21).toFixed(1)} trees</span> planted equivalent</div>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Daily savings</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '36px' }}>
+            {[{ h: '50%', d: 'M' }, { h: '65%', d: 'T' }, { h: '45%', d: 'W' }, { h: '80%', d: 'T' }, { h: '70%', d: 'F' }, { h: '55%', d: 'S' }, { h: '90%', d: 'S' }].map((b, idx) => (
+              <motion.div key={idx}
+                initial={{ height: 0 }}
+                animate={{ height: b.h }}
+                transition={{ duration: 0.8, delay: 0.5 + idx * 0.05, type: 'spring' }}
+                style={{
+                  flex: 1, borderRadius: '3px 3px 0 0',
+                  background: idx === 6 ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
+                  position: 'relative',
+                }}>
+                <span style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{b.d}</span>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>

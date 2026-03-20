@@ -4,8 +4,8 @@
   font-family: var(--body);
   font-size: 15px;
   line-height: 1.6;
-  overflow: hidden;
-  height: 100vh;
+  overflow-y: auto;
+  min-height: 100vh;
   position: relative;
 }
 
@@ -30,14 +30,14 @@
 .login-wrap {
   position: relative; z-index: 1;
   display: grid; grid-template-columns: 1fr 1fr;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 /* ── LEFT PANEL ── */
 .left-panel {
   display: flex; flex-direction: column;
-  justify-content: space-between;
-  padding: 36px 48px;
+  justify-content: flex-start;
+  padding: 40px 6% 48px;
   position: relative; overflow: hidden;
 }
 .left-panel::after {
@@ -67,6 +67,7 @@
   font-family: var(--display); font-size: 18px; font-weight: 700;
   text-decoration: none; color: var(--text);
   position: relative; z-index: 1;
+  margin-bottom: 10vh;
 }
 .logo-mark {
   width: 34px; height: 34px; border-radius: 9px;
@@ -82,11 +83,11 @@
 }
 .left-tagline {
   font-size: 10px; font-family: var(--mono); color: var(--green);
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
 }
 .left-title {
   font-family: var(--display); font-size: 46px; font-weight: 800;
-  letter-spacing: -2px; line-height: 1.0; margin-bottom: 20px;
+  letter-spacing: -2px; line-height: 1.1; margin-bottom: 24px;
 }
 .left-title .accent {
   background: linear-gradient(90deg, var(--green), var(--teal));
@@ -94,12 +95,12 @@
   background-clip: text;
 }
 .left-desc {
-  font-size: 15px; color: var(--text2); max-width: 360px;
-  line-height: 1.7; font-weight: 300; margin-bottom: 36px;
+  font-size: 15px; color: var(--text2); max-width: 440px;
+  line-height: 1.7; font-weight: 300; margin-bottom: 44px;
 }
 
 /* Live metrics strip */
-.metrics-strip { display: flex; flex-direction: column; gap: 12px; }
+.metrics-strip { display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding-top: 40px; }
 .metric-row {
   display: flex; align-items: center; justify-content: space-between;
   background: rgba(10,21,32,0.6);
@@ -141,13 +142,13 @@
 
 /* ── RIGHT PANEL ── */
 .right-panel {
-  display: flex; align-items: center; justify-content: center;
-  padding: 40px 60px;
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: 40px 8% 48px;
   position: relative;
 }
 
 .login-card {
-  width: 100%; max-width: 400px;
+  width: 100%; max-width: 440px;
   animation: l-fade-up .7s .05s ease both;
 }
 
@@ -329,7 +330,7 @@
 
 /* Sign up prompt */
 .signup-prompt {
-  text-align: center; font-size: 12px; color: var(--text3); margin-top: 4px;
+  text-align: left; font-size: 12px; color: var(--text3); margin-top: 8px;
 }
 .signup-link { color: var(--green); text-decoration: none; font-weight: 500; }
 .signup-link:hover { text-decoration: underline; }
@@ -393,12 +394,12 @@
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .left-panel {
-    padding: 28px 32px;
+    padding: 48px 8%;
   }
   .left-title {
-    font-size: 36px;
+    font-size: 38px;
   }
   .right-panel {
-    padding: 40px 40px;
+    padding: 48px 8%;
   }
 }

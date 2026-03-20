@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
 import Orders from './pages/Orders';
+import AIForecast from './pages/AIForecast';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { API_BASE_URL } from './api';
 import BackgroundCanvas from './components/BackgroundCanvas';
@@ -167,6 +168,14 @@ export default function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Orders />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/ai-forecast" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AIForecast />
                 </AppLayout>
               </ProtectedRoute>
             } />

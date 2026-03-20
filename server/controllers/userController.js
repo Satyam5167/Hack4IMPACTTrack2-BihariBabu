@@ -123,13 +123,68 @@ export const walletLogin = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    const user = await pool.query('SELECT id, name, email, wallet_address, picture FROM users WHERE id = $1', [req.userId]);
-    
+    const user = await pool.query(
+      'SELECT id, name, email, wallet_address, picture, location FROM users WHERE id = $1',
+      [req.userId]
+    );
     if (user.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    
     res.json({ user: user.rows[0] });
   } catch (err) {
     console.error('getMe error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  const { location } = req.body;
+  if (!location || typeof location !== 'string' || !location.trim()) {
+    return res.status(400).json({ error: 'Location is required' });
+  }
+  try {
+    const result = await pool.query(
+      'UPDATE users SET location = $1 WHERE id = $2 RETURNING id, name, email, wallet_address, picture, location',
+      [location.trim(), req.userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error('updateProfile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getSolarPanel = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM solar_panels WHERE user_id = $1',
+      [req.userId]
+    );
+    res.json({ panel: result.rows[0] || null });
+  } catch (err) {
+    console.error('getSolarPanel error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const upsertSolarPanel = async (req, res) => {
+  const { panel_kw, panel_tilt, panel_azimuth, panel_efficiency } = req.body;
+  if (!panel_kw) return res.status(400).json({ error: 'panel_kw is required' });
+  try {
+    const result = await pool.query(
+      `INSERT INTO solar_panels (user_id, panel_kw, panel_tilt, panel_azimuth, panel_efficiency)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id) DO UPDATE SET
+         panel_kw = EXCLUDED.panel_kw,
+         panel_tilt = EXCLUDED.panel_tilt,
+         panel_azimuth = EXCLUDED.panel_azimuth,
+         panel_efficiency = EXCLUDED.panel_efficiency,
+         updated_at = NOW()
+       RETURNING *`,
+      [req.userId, panel_kw, panel_tilt ?? 15, panel_azimuth ?? 180, panel_efficiency ?? 0.18]
+    );
+    res.json({ panel: result.rows[0] });
+  } catch (err) {
+    console.error('upsertSolarPanel error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };

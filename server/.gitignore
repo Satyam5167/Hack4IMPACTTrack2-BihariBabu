@@ -3,6 +3,10 @@ node_modules
 .env.local
 build
 build/contracts
+ml/venv
+venv/
+__pycache__/
+.ipynb_checkpoints/
 
 # Hardhat
 cache

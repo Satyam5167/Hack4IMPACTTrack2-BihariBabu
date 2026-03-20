@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../App';
 import { API_BASE_URL } from '../api';
+import { Sun, Leaf, IndianRupee, Mail, Lock, Eye, EyeOff, Zap, Link2, AlertTriangle } from 'lucide-react';
 import './Login.css';
 
 const TRADES = [
@@ -130,7 +131,7 @@ export default function Login() {
 
   const showSuccess = () => {
     setShowSuccessOverlay(true);
-    showToast('⚡', 'Welcome back to the Grid!');
+    showToast('Welcome back to the Grid!');
     setTimeout(() => { navigate('/dashboard'); }, 1800);
   };
 
@@ -196,7 +197,7 @@ export default function Login() {
   };
 
   const handleGoogleOAuth = () => {
-    showToast('🚀', 'Redirecting to Google...');
+    showToast('Redirecting to Google...');
     window.location.href = `${API_BASE_URL}/api/users/auth/google`;
   };
 
@@ -213,7 +214,9 @@ export default function Login() {
 
           {/* Logo */}
           <Link to="/" className="left-logo" style={{ animation: 'l-fade-up .5s ease both' }}>
-            <div className="logo-mark">⚡</div>
+            <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={20} color="var(--green)" />
+            </div>
             EnergyGrid
           </Link>
 
@@ -232,7 +235,9 @@ export default function Login() {
             <div className="metrics-strip">
               <div className="metric-row">
                 <div className="metric-left">
-                  <div className="metric-icon" style={{ background: 'rgba(0,255,135,0.08)' }}>☀️</div>
+                  <div className="metric-icon" style={{ background: 'rgba(0,255,135,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Sun size={14} color="var(--green)" />
+                  </div>
                   <div>
                     <div className="metric-label">Live solar production</div>
                     <div className="metric-val" style={{ color: 'var(--green)' }}>{solarVal} kWh</div>
@@ -242,7 +247,9 @@ export default function Login() {
               </div>
               <div className="metric-row">
                 <div className="metric-left">
-                  <div className="metric-icon" style={{ background: 'rgba(0,229,204,0.08)' }}>🌱</div>
+                  <div className="metric-icon" style={{ background: 'rgba(0,229,204,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Leaf size={14} color="var(--teal)" />
+                  </div>
                   <div>
                     <div className="metric-label">CO₂ saved today</div>
                     <div className="metric-val" style={{ color: 'var(--teal)' }}>142 kg</div>
@@ -252,7 +259,9 @@ export default function Login() {
               </div>
               <div className="metric-row">
                 <div className="metric-left">
-                  <div className="metric-icon" style={{ background: 'rgba(245,158,11,0.08)' }}>💰</div>
+                  <div className="metric-icon" style={{ background: 'rgba(245,158,11,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <IndianRupee size={14} color="var(--amber)" />
+                  </div>
                   <div>
                     <div className="metric-label">Market price now</div>
                     <div className="metric-val" style={{ color: 'var(--amber)' }}>₹ {priceVal.toFixed(2)} / kWh</div>
@@ -303,7 +312,7 @@ export default function Login() {
               <div className="input-group">
                 <label className="input-label">Email address</label>
                 <div className="input-wrap">
-                  <span className="input-icon">✉</span>
+                  <span className="input-icon" style={{ display: 'flex', alignItems: 'center' }}><Mail size={14} /></span>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={`form-input ${errorMsg ? 'error' : ''}`} style={{ borderColor: email === 'demo@energygrid.app' ? 'var(--green)' : undefined }} placeholder="you@example.com" autoComplete="email" />
                 </div>
               </div>
@@ -312,9 +321,9 @@ export default function Login() {
               <div className="input-group">
                 <label className="input-label">Password</label>
                 <div className="input-wrap">
-                  <span className="input-icon">🔒</span>
+                  <span className="input-icon" style={{ display: 'flex', alignItems: 'center' }}><Lock size={14} /></span>
                   <input type={pwdVisible ? 'text' : 'password'} value={pwd} onChange={e => setPwd(e.target.value)} className={`form-input ${errorMsg ? 'error' : ''}`} style={{ borderColor: pwd === 'demo1234' ? 'var(--green)' : undefined }} placeholder="••••••••" autoComplete="current-password" />
-                  <button type="button" onClick={() => setPwdVisible(!pwdVisible)} className="pwd-toggle" tabIndex="-1">{pwdVisible ? '🙈' : '👁'}</button>
+                  <button type="button" onClick={() => setPwdVisible(!pwdVisible)} className="pwd-toggle" tabIndex="-1" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pwdVisible ? <EyeOff size={14} /> : <Eye size={14} />}</button>
                 </div>
               </div>
 
@@ -329,7 +338,7 @@ export default function Login() {
 
               {/* Error message */}
               <div className={`error-msg ${errorMsg ? 'show' : ''}`}>
-                <span>⚠</span>
+                <span style={{ display: 'flex', alignItems: 'center' }}><AlertTriangle size={13} /></span>
                 <span>{errorMsg || 'Invalid credentials. Please try again.'}</span>
               </div>
 
@@ -365,11 +374,42 @@ export default function Login() {
 
               {/* Wallet connect */}
               <div className="wallet-row">
-                <button type="button" onClick={() => walletConnect('MetaMask')} className="wallet-btn">
-                  🦊 MetaMask
+                <button type="button" onClick={() => walletConnect('MetaMask')} className="wallet-btn" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="16" height="16" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
+                    <polygon fill="#e2761b" stroke="#e2761b" points="274.1,35.5 174.6,109.4 193,65.8"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="44.4,35.5 143.1,110.1 125.6,65.8"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="238.3,206.8 211.8,247.4 268.5,263 284.8,207.7"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="33.9,207.7 50.1,263 106.8,247.4 80.3,206.8"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="103.6,138.2 87.8,162.1 144.1,164.6 142.1,104.1"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="214.9,138.2 175.9,103.4 174.6,164.6 230.8,162.1"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="106.8,247.4 140.6,230.9 111.4,208.1"/>
+                    <polygon fill="#e4761b" stroke="#e4761b" points="177.9,230.9 211.8,247.4 207.1,208.1"/>
+                    <polygon fill="#d7c1b3" stroke="#d7c1b3" points="211.8,247.4 177.9,230.9 180.6,253 180.3,262.3"/>
+                    <polygon fill="#d7c1b3" stroke="#d7c1b3" points="106.8,247.4 138.3,262.3 138.1,253 140.6,230.9"/>
+                    <polygon fill="#233447" stroke="#233447" points="138.8,193.5 110.6,185.2 130.5,176.1"/>
+                    <polygon fill="#233447" stroke="#233447" points="179.8,193.5 188,176.1 207.9,185.2"/>
+                    <polygon fill="#cd6116" stroke="#cd6116" points="106.8,247.4 111.6,206.8 80.3,207.7"/>
+                    <polygon fill="#cd6116" stroke="#cd6116" points="207,206.8 211.8,247.4 238.3,207.7"/>
+                    <polygon fill="#cd6116" stroke="#cd6116" points="230.8,162.1 174.6,164.6 179.8,193.5 188,176.1 207.9,185.2"/>
+                    <polygon fill="#cd6116" stroke="#cd6116" points="110.6,185.2 130.5,176.1 138.8,193.5 144.1,164.6 87.8,162.1"/>
+                    <polygon fill="#e4751f" stroke="#e4751f" points="87.8,162.1 138.8,193.5 111.4,208.1"/>
+                    <polygon fill="#e4751f" stroke="#e4751f" points="207.1,208.1 179.8,193.5 230.8,162.1"/>
+                    <polygon fill="#e4751f" stroke="#e4751f" points="144.1,164.6 138.8,193.5 146.3,232.8 148,180.5"/>
+                    <polygon fill="#e4751f" stroke="#e4751f" points="174.6,164.6 170.7,180.4 172.6,232.8 179.8,193.5"/>
+                    <polygon fill="#f6851b" stroke="#f6851b" points="179.8,193.5 172.6,232.8 177.9,230.9 207.1,208.1"/>
+                    <polygon fill="#f6851b" stroke="#f6851b" points="111.4,208.1 140.6,230.9 146.3,232.8 138.8,193.5"/>
+                    <polygon fill="#c0ad9e" stroke="#c0ad9e" points="180.3,262.3 180.6,253 178.1,250.8 140.4,250.8 138.1,253 138.3,262.3 106.8,247.4 117.8,256.4 140.1,271.9 178.4,271.9 200.8,256.4 211.8,247.4"/>
+                    <polygon fill="#161616" stroke="#161616" points="177.9,230.9 172.6,226.9 146.3,226.9 140.6,230.9 138.1,253 140.4,250.8 178.1,250.8 180.6,253"/>
+                    <polygon fill="#763d16" stroke="#763d16" points="278.3,114.2 286.8,73.4 274.1,35.5 177.9,106.9 214.9,138.2 267.2,153.5 278.8,140 273.6,136.2 281.8,128.8 275.4,123.8 283.6,117.6"/>
+                    <polygon fill="#763d16" stroke="#763d16" points="31.8,73.4 40.3,114.2 35,117.6 43.2,123.8 36.8,128.8 45,136.2 39.8,140 51.3,153.5 103.6,138.2 140.6,106.9 44.4,35.5"/>
+                    <polygon fill="#f6851b" stroke="#f6851b" points="267.2,153.5 214.9,138.2 230.8,162.1 207.1,208.1 238.3,207.7 284.8,207.7"/>
+                    <polygon fill="#f6851b" stroke="#f6851b" points="103.6,138.2 51.3,153.5 33.9,207.7 80.3,207.7 111.4,208.1 87.8,162.1"/>
+                    <polygon fill="#f6851b" stroke="#f6851b" points="174.6,164.6 177.9,106.9 193.1,65.8 125.6,65.8 140.6,106.9 144.1,164.6 146.3,180.6 146.3,226.9 172.6,226.9 172.6,180.6"/>
+                  </svg>
+                  MetaMask
                 </button>
-                <button type="button" onClick={() => walletConnect('WalletConnect')} className="wallet-btn">
-                  🔗 WalletConnect
+                <button type="button" onClick={() => walletConnect('WalletConnect')} className="wallet-btn" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Link2 size={13} /> WalletConnect
                 </button>
               </div>
 

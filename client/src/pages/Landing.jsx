@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useToast } from '../contexts/ToastContext';
+import { Zap, Sun, Leaf, Bot, ArrowLeftRight, Link2, Scale, Battery } from 'lucide-react';
 import './Landing.css';
 
 export default function Landing() {
@@ -78,7 +79,7 @@ export default function Landing() {
           transition={{ duration: 0.6 }}
         >
           <Link to="/" className="nav-logo">
-            <div className="logo-mark">⚡</div>
+            <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={16} color="var(--green)" /></div>
             EnergyGrid
           </Link>
           <div className="nav-links">
@@ -110,7 +111,7 @@ export default function Landing() {
             <motion.div className="float-card" whileHover={{ scale: 1.1, rotate: 2 }} transition={{ type: "spring", stiffness: 300 }}>
               <div className="float-label">CO₂ Saved Today</div>
               <div className="float-val b">142 kg</div>
-              <div className="float-trend">🌱 microgrid total</div>
+              <div className="float-trend"><Leaf size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />microgrid total</div>
             </motion.div>
           </motion.div>
 
@@ -176,28 +177,28 @@ export default function Landing() {
           <motion.div className="steps-grid" {...revealProps} transition={{ ...revealProps.transition, delay: 0.1 }}>
             <div className="step">
               <div className="step-num">01 —</div>
-              <div className="step-icon" style={{ background: 'rgba(0,255,135,0.08)' }}>☀️</div>
+              <div className="step-icon" style={{ background: 'rgba(0,255,135,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sun size={22} color="var(--green)" /></div>
               <div className="step-title">Simulate Solar</div>
               <div className="step-desc">Your panel's output is modeled using an irradiance curve — time of day, weather, and panel size.</div>
               <div className="step-connector"></div>
             </div>
             <div className="step">
               <div className="step-num">02 —</div>
-              <div className="step-icon" style={{ background: 'rgba(14,165,233,0.08)' }}>🤖</div>
+              <div className="step-icon" style={{ background: 'rgba(14,165,233,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Bot size={22} color="var(--blue)" /></div>
               <div className="step-title">AI Forecasts</div>
               <div className="step-desc">Our ML model predicts your production 48 hours ahead with a confidence band so you plan trades early.</div>
               <div className="step-connector"></div>
             </div>
             <div className="step">
               <div className="step-num">03 —</div>
-              <div className="step-icon" style={{ background: 'rgba(245,158,11,0.08)' }}>🔄</div>
+              <div className="step-icon" style={{ background: 'rgba(245,158,11,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeftRight size={22} color="var(--amber)" /></div>
               <div className="step-title">Order Book Matches</div>
               <div className="step-desc">A double-auction engine matches buyers and sellers by price-time priority. No manual negotiation needed.</div>
               <div className="step-connector"></div>
             </div>
             <div className="step">
               <div className="step-num">04 —</div>
-              <div className="step-icon" style={{ background: 'rgba(0,229,204,0.08)' }}>🔗</div>
+              <div className="step-icon" style={{ background: 'rgba(0,229,204,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Link2 size={22} color="var(--teal)" /></div>
               <div className="step-title">On-Chain Settlement</div>
               <div className="step-desc">Every settled trade is logged on Sepolia with a verifiable TX hash and CO₂ credit. Immutable audit trail.</div>
             </div>
@@ -214,28 +215,28 @@ export default function Landing() {
 
               <div className="feature-list">
                 <div className="feature-item">
-                  <div className="feature-icon" style={{ background: 'rgba(0,255,135,0.08)' }}>🤖</div>
+                  <div className="feature-icon" style={{ background: 'rgba(0,255,135,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Bot size={20} color="var(--green)" /></div>
                   <div className="feature-text">
                     <div className="feature-title">AI-Powered Forecasting</div>
                     <div className="feature-desc">Prophet/LSTM model trained on historical production. 48h predictions with confidence bands shown right on the dashboard.</div>
                   </div>
                 </div>
                 <div className="feature-item">
-                  <div className="feature-icon" style={{ background: 'rgba(245,158,11,0.08)' }}>⚖️</div>
+                  <div className="feature-icon" style={{ background: 'rgba(245,158,11,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Scale size={20} color="var(--amber)" /></div>
                   <div className="feature-text">
                     <div className="feature-title">Bounded Dynamic Pricing</div>
                     <div className="feature-desc">Price discovery via double auction. Floor ₹2 — ceiling ₹15. No negative prices, no market manipulation.</div>
                   </div>
                 </div>
                 <div className="feature-item">
-                  <div className="feature-icon" style={{ background: 'rgba(0,229,204,0.08)' }}>🌱</div>
+                  <div className="feature-icon" style={{ background: 'rgba(0,229,204,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Leaf size={20} color="var(--teal)" /></div>
                   <div className="feature-text">
                     <div className="feature-title">Carbon Credit Tracking</div>
                     <div className="feature-desc">Every traded kWh earns 0.4 kg CO₂ credit. Track your environmental impact and share your green badge.</div>
                   </div>
                 </div>
                 <div className="feature-item">
-                  <div className="feature-icon" style={{ background: 'rgba(14,165,233,0.08)' }}>🔋</div>
+                  <div className="feature-icon" style={{ background: 'rgba(14,165,233,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Battery size={20} color="var(--blue)" /></div>
                   <div className="feature-text">
                     <div className="feature-title">Community Battery Pool</div>
                     <div className="feature-desc">Shared 50 kWh virtual buffer absorbs excess when no buyer is present. Keeps the microgrid stable 24/7.</div>
