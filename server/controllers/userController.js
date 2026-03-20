@@ -76,11 +76,12 @@ export const login = async (req, res) => {
 };
 
 export const googleLogin = async (req, res) => {
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'https://energygr1d.netlify.app';
   // Passport-google-oauth20 attaches the user to req.user
   const user = req.user;
   
   if (!user) {
-    return res.redirect('http://localhost:5173/login?error=auth_failed');
+    return res.redirect(`${FRONTEND_URL}/login?error=auth_failed`);
   }
 
   try {
@@ -88,10 +89,10 @@ export const googleLogin = async (req, res) => {
     res.cookie('token', token, cookieOptions);
     
     // Redirect back to dashboard or home
-    res.redirect('http://localhost:5173/dashboard');
+    res.redirect(`${FRONTEND_URL}/dashboard`);
   } catch (error) {
     console.error('Google login callback error:', error);
-    res.redirect('http://localhost:5173/login?error=server_error');
+    res.redirect(`${FRONTEND_URL}/login?error=server_error`);
   }
 };
 

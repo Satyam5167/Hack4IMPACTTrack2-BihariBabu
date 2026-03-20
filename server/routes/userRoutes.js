@@ -19,8 +19,11 @@ router.post('/logout', logout);
 // Google OAuth Redirect-based
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  googleLogin // Reuse or create a specialized callback handler
+  (req, res, next) => {
+    const failureUrl = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/login` : 'https://energygr1d.netlify.app/login';
+    passport.authenticate('google', { failureRedirect: failureUrl, session: false })(req, res, next);
+  },
+  googleLogin
 );
 
 export default router;
