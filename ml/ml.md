@@ -1,4 +1,4 @@
-# 🤖 EnergyGrid AI Service — Solar Production Forecasting Microservice
+# EnergyGrid AI Service — Solar Production Forecasting Microservice
 
 <div align="center">
 
@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.0.3-000000?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
-[![Prophet](https://img.shields.io/badge/Prophet-1.1.5-0064FF?style=flat-square)](https://facebook.github.io/prophet/)
+[![SciPy](https://img.shields.io/badge/SciPy-SciPy-8CAAE6?style=flat-square)](https://scipy.org/)
 [![pvlib](https://img.shields.io/badge/pvlib-0.11.0-orange?style=flat-square)](https://pvlib-python.readthedocs.io)
 [![Team](https://img.shields.io/badge/Team-BihariBabu-00e5cc?style=flat-square)](https://github.com/)
 
@@ -14,7 +14,7 @@
 
 ---
 
-## 📋 Overview
+## Overview
 
 This is the standalone AI microservice for the EnergyGrid P2P solar trading platform. It runs as a **separate Python Flask server on port 5001** and is called by the Node.js backend via HTTP.
 
@@ -22,14 +22,14 @@ Given a `user_id`, it:
 1. Fetches that user's **solar panel specs and GPS location** from PostgreSQL
 2. Pulls a **live 48-hour weather forecast** from the Open-Meteo API (free, no API key)
 3. Runs a **pvlib physics model** to estimate hourly solar production using real irradiance equations
-4. Runs **Facebook Prophet** on top for smoothing and uncertainty quantification
+4. Applies **SciPy Savitzky-Golay filtering** for signal smoothing and dynamic cloud-cover driven uncertainty quantification
 5. Returns **48 hourly predictions** with `yhat`, `yhat_lower`, `yhat_upper`, and a **confidence percentage** per hour
 
 > *This is not a toy random number generator — pvlib is the same physics library used by NREL (US National Renewable Energy Laboratory) and academic solar researchers worldwide.*
 
 ---
 
-## 🧠 How the Model Works
+## How the Model Works
 
 ### The Two-Layer Approach
 
@@ -47,22 +47,22 @@ Layer 1 — Physics (pvlib)
   + Cell temperature correction (efficiency drops when hot)
   → Hourly kWh estimate grounded in physical reality
 
-Layer 2 — Statistical (Prophet)
+Layer 2 — Statistical (SciPy Savitzky-Golay)
 ────────────────────────────────
 "Given the physics estimate, how do we smooth it 
  and quantify our uncertainty?"
 
-  Takes pvlib output as baseline signal (y variable)
-  + Cloud cover, temperature, precipitation as regressors
-  + Daily seasonality pattern learned from the data
+  Takes pvlib output as baseline signal
+  + Applies a 2nd-order Savitzky-Golay moving window filter
+  + Generates dynamic uncertainty bands based on Open-Meteo cloud cover
   → yhat (smoothed prediction)
-  → yhat_lower / yhat_upper (80% confidence band)
-  → Confidence % derived from band width relative to peak
+  → yhat_lower / yhat_upper (confidence band expanding up to ±40% when cloudy)
+  → Confidence % derived from band width relative to peak, penalized by rain
 ```
 
 ### Why Not Just pvlib?
 
-pvlib gives a single point estimate — it has no concept of uncertainty. On a day forecast as "30% cloud cover," the actual cloud movement could mean anything from 0.5× to 1.2× the physics prediction. Prophet wraps that uncertainty into a confidence band that your trading engine can act on.
+pvlib gives a single point estimate — it has no concept of uncertainty. On a day forecast as "30% cloud cover," the actual cloud movement could mean anything from 0.5× to 1.2× the physics prediction. Our SciPy mathematical filter wraps that uncertainty into a realistic confidence band that your trading engine can act on—without the heavyweight computational overhead of Prophet/Stan.
 
 ### Why Not Just an ML Model (LSTM etc.)?
 
@@ -70,7 +70,7 @@ Pure ML models need months of historical readings per household to generalize. p
 
 ---
 
-## 📐 Physics Model — Detailed
+## Physics Model — Detailed
 
 ### Step 1: Solar Position
 
@@ -124,7 +124,7 @@ production_kwh = dc_power_kw.clip(lower=0)
 
 ---
 
-## 📊 Confidence Score — How It's Calculated
+## Confidence Score — How It's Calculated
 
 ```python
 band_width           = yhat_upper - yhat_lower
@@ -152,7 +152,7 @@ confidence  < 50% → list 20%
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 ai_service/
@@ -165,7 +165,7 @@ ai_service/
 │   ├── database.py           ← Fetches user panel specs from PostgreSQL
 │   ├── weather.py            ← Open-Meteo API — 48h weather forecast
 │   ├── solar.py              ← pvlib physics model — hourly kWh estimate
-│   └── forecast.py           ← Prophet smoothing + confidence scoring
+│   └── forecast.py           ← SciPy smoothing + confidence scoring
 │
 ├── models/
 │   ├── __init__.py
@@ -178,7 +178,7 @@ ai_service/
 ├── tests/
 │   ├── test_weather.py       ← Mocked Open-Meteo tests
 │   ├── test_solar.py         ← pvlib output validation
-│   └── test_forecast.py      ← Prophet output + confidence tests
+│   └── test_forecast.py      ← SciPy output + confidence tests
 │
 ├── requirements.txt
 ├── .env.example
@@ -187,7 +187,7 @@ ai_service/
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 ### `POST /predict`
 
@@ -291,7 +291,7 @@ Liveness check. Called by Node.js backend before routing requests.
 
 ---
 
-## ⚙️ Request Pipeline (Internal Flow)
+## Request Pipeline (Internal Flow)
 
 ```
 POST /predict { user_id: 42 }
@@ -325,9 +325,9 @@ POST /predict { user_id: 42 }
                │
                ▼
 ┌───────────────────────────────┐
-│ 5. forecast.run_prophet()     │  ← Statistical smoothing
-│    → forecast DataFrame       │     pvlib_kwh as y variable
-│      with yhat, lower, upper  │     weather cols as regressors
+│ 5. forecast.smooth_forecast() │  ← Statistical smoothing
+│    → forecast DataFrame       │     pvlib_kwh smoothed via
+│      with yhat, lower, upper  │     Savitzky-Golay + uncertainty
 └──────────────┬────────────────┘
                │
                ▼
@@ -348,7 +348,7 @@ POST /predict { user_id: 42 }
 
 ---
 
-## 🗄️ Database Connection
+## Database Connection
 
 The service reads from the **existing `users` table** in the shared PostgreSQL database. It never writes to the database — read-only access.
 
@@ -363,7 +363,7 @@ WHERE id = %s
 
 ---
 
-## 🌦️ Weather Data — Open-Meteo
+## Weather Data — Open-Meteo
 
 [Open-Meteo](https://open-meteo.com/) is a free, open-source weather API with no API key required. It provides hourly forecasts up to 16 days ahead using ECMWF and DWD models.
 
@@ -383,7 +383,7 @@ WHERE id = %s
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -413,8 +413,6 @@ venv\Scripts\activate           # Windows
 pip install -r requirements.txt
 ```
 
-> ⚠️ Prophet installation can take 2–3 minutes — it compiles Stan under the hood. This is normal.
-
 ### 4. Environment Variables
 
 ```bash
@@ -428,8 +426,6 @@ FLASK_PORT=5001
 FLASK_DEBUG=false
 OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
 OPEN_METEO_TIMEOUT=10
-PROPHET_INTERVAL_WIDTH=0.80
-PROPHET_CHANGEPOINT_PRIOR=0.01
 DEFAULT_ALTITUDE_M=920
 ```
 
@@ -455,7 +451,7 @@ docker run -p 5001:5001 --env-file .env energygrid-ai
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 pytest tests/ -v
@@ -467,7 +463,7 @@ pytest tests/ -v
 |---|---|
 | `test_weather.py` | Mocked Open-Meteo response, 48 rows, no NaN, error handling |
 | `test_solar.py` | pvlib output shape, all values ≥ 0, peak at solar noon, zero at night |
-| `test_forecast.py` | Prophet output shape, yhat_lower ≤ yhat ≤ yhat_upper, confidence 10–99 |
+| `test_forecast.py` | Savitzky-Golay output shape, yhat_lower ≤ yhat ≤ yhat_upper, confidence 10–99 |
 
 ```bash
 # Run individual test files
@@ -482,12 +478,12 @@ pytest tests/ --cov=services --cov-report=term-missing
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ```
 flask==3.0.3              Web framework
-prophet==1.1.5            Time-series forecasting (Meta)
 pvlib==0.11.0             Solar physics simulation (NREL)
+scipy==1.13.0             Signal processing and smoothing
 pandas==2.2.2             DataFrame operations
 numpy==1.26.4             Numerical operations
 requests==2.32.3          Open-Meteo HTTP client
@@ -499,7 +495,7 @@ gunicorn==22.0.0          Production WSGI server
 
 ---
 
-## 🔗 Integration with Node.js Backend
+## Integration with Node.js Backend
 
 The Node.js backend calls this service from `server/services/aiService.js`:
 
@@ -553,7 +549,7 @@ forecast.forecast
 
 ---
 
-## 📈 Model Accuracy Metrics
+## Model Accuracy Metrics
 
 Evaluate your model after collecting real production data:
 
@@ -581,10 +577,10 @@ print(f"Coverage: {coverage:.1%}  (target: ~80% for 80% interval)")
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
-- [ ] **LSTM model** — replace Prophet with a trained LSTM for higher accuracy once historical data accumulates
-- [ ] **Per-household model persistence** — save fitted Prophet models to disk, retrain weekly instead of per-request
+- [ ] **LSTM model** — replace Savitzky-Golay filter with a trained LSTM for higher accuracy once historical data accumulates
+- [ ] **Per-household model persistence** — save fitted baseline models to disk, retrain weekly instead of per-request
 - [ ] **Redis caching** — cache forecast output for 30 minutes per user to avoid redundant API + model calls
 - [ ] **Consumption forecasting** — add a second endpoint `/predict/consumption` to forecast demand alongside supply
 - [ ] **Monte Carlo Dropout** — implement uncertainty quantification for the LSTM upgrade path
@@ -593,7 +589,7 @@ print(f"Coverage: {coverage:.1%}  (target: ~80% for 80% interval)")
 
 ---
 
-## 🏷️ Part of EnergyGrid Platform
+## Part of EnergyGrid Platform
 
 This microservice is one of four services in the EnergyGrid stack:
 
@@ -601,17 +597,17 @@ This microservice is one of four services in the EnergyGrid stack:
 |---|---|---|---|
 | **React Frontend** | 3000 | React + Tailwind | Dashboard + Marketplace UI |
 | **Node.js Backend** | 5000 | Express + Socket.io | API + Matching Engine |
-| **AI Service** ← you are here | 5001 | Flask + pvlib + Prophet | Solar Forecasting |
+| **AI Service** ← you are here | 5001 | Flask + pvlib + SciPy | Solar Forecasting |
 | **PostgreSQL** | 5432 | PostgreSQL 14 | Persistent data store |
 
 ---
 
 <div align="center">
 
-**🤖 EnergyGrid AI Service · Team BihariBabu**
+**EnergyGrid AI Service · Team BihariBabu**
 
 *Intelligent Renewable & Smart Energy Systems*
 
-pvlib × Prophet × Open-Meteo · Physics-grounded · Uncertainty-aware
+pvlib × SciPy × Open-Meteo · Physics-grounded · Uncertainty-aware
 
 </div>

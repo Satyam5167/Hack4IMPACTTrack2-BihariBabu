@@ -245,6 +245,16 @@ body::after {
   }
 }
 
+.page-pad {
+  padding: 32px 28px;
+}
+
+@media (max-width: 768px) {
+  .page-pad {
+    padding: 20px 16px;
+  }
+}
+
 .skeleton {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.02) 75%);
   background-size: 200% 100%;
@@ -544,7 +554,7 @@ body::after {
 
 .dash-grid-2 {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
@@ -590,8 +600,22 @@ body::after {
    ≤ 960px  (tablet)
    ──────────────────────── */
 @media (max-width: 960px) {
+
+  /* --- Navbar (class-based hiding) --- */
+  .navbar-tabs {
+    display: none !important;
+  }
+
+  .navbar-right-full {
+    display: none !important;
+  }
+
+  .navbar-mobile-menu {
+    display: flex !important;
+  }
+
   .dash-grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .dash-grid-bottom {

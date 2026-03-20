@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
-import { useAuth } from '../App';
-import { API_BASE_URL } from '../api';
+import { Zap, User, Mail, Lock, Eye, EyeOff, AlertTriangle, Link2, Sun } from 'lucide-react';
 import './Login.css'; // Reuse login styles
+import { API_BASE_URL } from '../apiBase';
 
 const TRADES = [
   { from: 'Priya S.', to: 'Ravi M.', amt: '2.4 kWh', hash: '0x3f4a...2b9c', price: '₹6.40' },
@@ -193,7 +190,9 @@ export default function Signup() {
           <div className="orb orb1"></div>
           <div className="orb orb2"></div>
           <Link to="/" className="left-logo">
-            <div className="logo-mark">⚡</div>
+            <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={20} fill="#ffffff" color="#ffffff" />
+            </div>
             EnergyGrid
           </Link>
           <div className="left-main">
@@ -209,7 +208,9 @@ export default function Signup() {
             <div className="metrics-strip">
                <div className="metric-row">
                 <div className="metric-left">
-                  <div className="metric-icon" style={{ background: 'rgba(0,255,135,0.08)' }}>☀️</div>
+                  <div className="metric-icon" style={{ background: 'rgba(0,255,135,0.08)' }}>
+                    <Sun size={14} color="var(--green)" />
+                  </div>
                   <div>
                     <div className="metric-label">Live solar production</div>
                     <div className="metric-val" style={{ color: 'var(--green)' }}>{solarVal} kWh</div>
@@ -249,7 +250,9 @@ export default function Signup() {
               <div className="input-group">
                 <label className="input-label">Full Name</label>
                 <div className="input-wrap">
-                  <span className="input-icon">👤</span>
+                  <span className="input-icon">
+                    <User size={16} />
+                  </span>
                   <input type="text" value={name} onChange={e => setName(e.target.value)} className="form-input" placeholder="Arjun K." />
                 </div>
               </div>
@@ -257,7 +260,9 @@ export default function Signup() {
               <div className="input-group">
                 <label className="input-label">Email address</label>
                 <div className="input-wrap">
-                  <span className="input-icon">✉</span>
+                  <span className="input-icon">
+                    <Mail size={16} />
+                  </span>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={`form-input ${errorMsg ? 'error' : ''}`} placeholder="you@example.com" />
                 </div>
               </div>
@@ -265,14 +270,18 @@ export default function Signup() {
               <div className="input-group">
                 <label className="input-label">Password</label>
                 <div className="input-wrap">
-                  <span className="input-icon">🔒</span>
+                  <span className="input-icon">
+                    <Lock size={16} />
+                  </span>
                   <input type={pwdVisible ? 'text' : 'password'} value={pwd} onChange={e => setPwd(e.target.value)} className={`form-input ${errorMsg ? 'error' : ''}`} placeholder="••••••••" />
-                  <button type="button" onClick={() => setPwdVisible(!pwdVisible)} className="pwd-toggle">{pwdVisible ? '🙈' : '👁'}</button>
+                  <button type="button" onClick={() => setPwdVisible(!pwdVisible)} className="pwd-toggle">
+                    {pwdVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
               <div className={`error-msg ${errorMsg ? 'show' : ''}`}>
-                <span>⚠</span>
+                <AlertTriangle size={14} />
                 <span>{errorMsg}</span>
               </div>
 
@@ -303,11 +312,13 @@ export default function Signup() {
 
               {/* Wallet connect */}
               <div className="wallet-row" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <button type="button" onClick={() => walletConnect('MetaMask')} className="wallet-btn" style={{ flex: 1, padding: '10px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer' }}>
-                  🦊 MetaMask
+                <button type="button" onClick={() => walletConnect('MetaMask')} className="wallet-btn" style={{ flex: 1, padding: '10px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" style={{ width: '18px', height: '18px' }} />
+                  MetaMask
                 </button>
-                <button type="button" onClick={() => walletConnect('WalletConnect')} className="wallet-btn" style={{ flex: 1, padding: '10px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer' }}>
-                  🔗 Wallet
+                <button type="button" onClick={() => walletConnect('WalletConnect')} className="wallet-btn" style={{ flex: 1, padding: '10px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Link2 size={18} />
+                  Wallet
                 </button>
               </div>
 

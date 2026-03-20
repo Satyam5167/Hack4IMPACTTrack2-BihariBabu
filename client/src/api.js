@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://localhost:4000';
+import { API_BASE_URL } from './apiBase';
 
 export const recordEnergyReading = async (produced, consumed) => {
   const response = await fetch(`${API_BASE_URL}/api/energy/record`, {
@@ -74,6 +74,20 @@ export const getTopTraders = async () => {
 
 export const getMarketStats = async () => {
   const response = await fetch(`${API_BASE_URL}/api/energy/stats`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getPoolStats = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/energy/pool`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getImpactStats = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/energy/impact`, {
     credentials: 'include'
   });
   return response.json();

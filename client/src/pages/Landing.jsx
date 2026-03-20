@@ -79,7 +79,9 @@ export default function Landing() {
           transition={{ duration: 0.6 }}
         >
           <Link to="/" className="nav-logo">
-            <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Zap size={16} color="var(--green)" /></div>
+            <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={16} fill="#ffffff" color="#ffffff" />
+            </div>
             EnergyGrid
           </Link>
           <div className="nav-links">
@@ -354,7 +356,9 @@ export default function Landing() {
         {/* FOOTER */}
         <footer>
           <div className="footer-left">
-            <div className="logo-mark" style={{ width: '24px', height: '24px', fontSize: '12px' }}>⚡</div>
+            <div className="logo-mark" style={{ width: '24px', height: '24px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={11} fill="#ffffff" color="#ffffff" />
+            </div>
             <span className="footer-copy">© 2025 EnergyGrid · Built for Hackathon</span>
           </div>
           <div className="footer-links">

@@ -5,7 +5,7 @@ import Ticker from '../components/Ticker';
 import RecordEnergyModal from '../components/RecordEnergyModal';
 import ListEnergyModal from '../components/ListEnergyModal';
 import { useToast } from '../contexts/ToastContext';
-import { getEnergySurplus, getRecentTrades, getTopTraders } from '../api';
+import { getEnergySurplus, getRecentTrades, getTopTraders, getPoolStats, getImpactStats } from '../api';
 
 // Animated Number Component
 function AnimatedNumber({ value, format = (v) => v.toFixed(1) }) {
@@ -28,6 +28,8 @@ export default function Dashboard() {
   const [listModalOpen, setListModalOpen] = useState(false);
   const [recentTrades, setRecentTrades] = useState([]);
   const [leaders, setLeaders] = useState([]);
+  const [poolStats, setPoolStats] = useState({ stored: 0, capacity: 500, percentage: 0, inboundToday: 0, outboundToday: 0 });
+  const [impactHistory, setImpactHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRealData = async () => {
@@ -69,6 +71,18 @@ export default function Dashboard() {
       if (topRes.topTraders) {
         setLeaders(topRes.topTraders);
       }
+
+      // Fetch pool stats
+      const pStats = await getPoolStats();
+      if (pStats && pStats.stored !== undefined) {
+        setPoolStats(pStats);
+      }
+
+      // Fetch impact stats
+      const iStats = await getImpactStats();
+      if (iStats && iStats.history) {
+        setImpactHistory(iStats.history);
+      }
     } catch (e) {
       console.error('Failed to fetch dashboard data:', e);
     } finally {
@@ -81,10 +95,10 @@ export default function Dashboard() {
   }, []);
 
   const statCards = [
-    { label: 'Solar Production', icon: Sun,  value: stats.prod,           unit: 'kWh total',      color: 'green' },
-    { label: 'Energy Consumed',  icon: Plug, value: stats.cons,           unit: 'kWh total',      color: 'blue' },
-    { label: 'Surplus Available',icon: Zap,  value: stats.surplus,        unit: 'kWh tradeable',  color: 'amber', action: 'List ↗' },
-    { label: 'CO₂ Saved',        icon: Leaf, value: Math.floor(stats.co2),unit: 'kg total offset', color: 'teal' },
+    { label: 'Solar Production', icon: Sun, value: stats.prod, unit: 'kWh total', color: 'green' },
+    { label: 'Energy Consumed', icon: Plug, value: stats.cons, unit: 'kWh total', color: 'blue' },
+    { label: 'Surplus Available', icon: Zap, value: stats.surplus, unit: 'kWh tradeable', color: 'amber', action: 'List ↗' },
+    { label: 'CO₂ Saved', icon: Leaf, value: Math.floor(stats.co2), unit: 'kg total offset', color: 'teal' },
   ];
 
   const colorMap = {
@@ -211,50 +225,73 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Mid Row — Community Pool + Carbon Impact */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }} className="dash-grid-2">
+      <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }} className="dash-grid-2">
         {/* Pool Gauge */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 600 }}>Community Pool</span>
-            <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(14,165,233,0.1)', color: 'var(--blue)', border: '1px solid rgba(14,165,233,0.2)' }}>42/50 kWh</span>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(14,165,233,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={16} color="var(--blue)" />
+              </div>
+              <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, letterSpacing: '-0.2px' }}>Community Energy Pool</h3>
+            </div>
+            <div style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 600, background: 'rgba(14,165,233,0.08)', color: 'var(--blue)', border: '1px solid rgba(14,165,233,0.15)' }}>{poolStats.stored}/{poolStats.capacity} kWh</div>
           </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '140px', height: '80px' }}>
-              <svg width="140" height="80" viewBox="0 0 140 80">
-                <path d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="var(--border2)" strokeWidth="10" strokeLinecap="round" />
+            {/* The Gauge */}
+            <div style={{ position: 'relative', width: '150px', height: '85px', marginBottom: '10px' }} className="pool-gauge-container">
+              <svg width="150" height="85" viewBox="0 0 150 85">
+                <path d="M 20 80 A 55 55 0 0 1 130 80" fill="none" stroke="var(--border)" strokeWidth="12" strokeLinecap="round" />
                 <motion.path
                   initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1.5, type: 'spring', bounce: 0, delay: 0.5 }}
-                  d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="173" strokeDashoffset="35"
+                  animate={{ pathLength: poolStats.percentage / 100 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.8, ease: "easeOut", delay: 0.3 }}
+                  d="M 20 80 A 55 55 0 0 1 130 80" fill="none" stroke="url(#poolGrad)" strokeWidth="12" strokeLinecap="round" strokeDasharray="173"
                 />
                 <defs>
-                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="var(--green2)" />
+                  <linearGradient id="poolGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="var(--green)" />
                     <stop offset="100%" stopColor="var(--teal)" />
                   </linearGradient>
                 </defs>
               </svg>
-              <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)', lineHeight: 1, fontFamily: 'var(--mono)' }}>84%</div>
-                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>capacity</div>
+              <div style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--green)', lineHeight: 1, fontFamily: 'var(--mono)' }}>{poolStats.percentage}%</div>
+                <div style={{ fontSize: '9px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '2px' }}>filled</div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '14px', width: '100%' }}>
+
+            {/* Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px', width: '100%' }}>
               {[
-                { label: 'Stored', value: '42 kWh', color: 'var(--green)' },
-                { label: 'Capacity', value: '50 kWh', color: 'var(--text)' },
-                { label: 'Surplus In', value: '+2.1', color: 'var(--blue)' },
-                { label: 'Drawn Out', value: '-0.8', color: 'var(--amber)' },
-              ].map(p => (
-                <div key={p.label} style={{ background: 'var(--bg3)', borderRadius: '8px', padding: '10px 12px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{p.label}</div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginTop: '2px', fontFamily: 'var(--mono)', color: p.color }}>{p.value}</div>
-                </div>
+                { label: 'Stored Pool', value: poolStats.stored, unit: 'kWh', color: 'var(--green)' },
+                { label: 'Total Cap', value: poolStats.capacity, unit: 'kWh', color: 'var(--text)' },
+                { label: 'Inbound Today', value: `+${poolStats.inboundToday}`, unit: 'kWh', color: 'var(--blue)' },
+                { label: 'Outbound', value: `-${poolStats.outboundToday}`, unit: 'kWh', color: 'var(--amber)' },
+              ].map((p, idx) => (
+                <motion.div
+                  key={idx}
+                  whileHover={{ backgroundColor: 'var(--border)', scale: 1.02 }}
+                  style={{ background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 14px', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ fontSize: '10px', color: 'var(--text2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{p.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--mono)', color: p.color }}>{p.value}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: 600 }}>{p.unit}</span>
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Carbon Impact */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '14px', padding: '18px 20px' }}>
@@ -271,14 +308,14 @@ export default function Dashboard() {
           <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '12px' }}>≈ <span style={{ color: 'var(--teal)', fontWeight: 600 }}>{(stats.co2 / 21).toFixed(1)} trees</span> planted equivalent</div>
           <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Daily savings</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '36px' }}>
-            {[{ h: '50%', d: 'M' }, { h: '65%', d: 'T' }, { h: '45%', d: 'W' }, { h: '80%', d: 'T' }, { h: '70%', d: 'F' }, { h: '55%', d: 'S' }, { h: '90%', d: 'S' }].map((b, idx) => (
+            {(impactHistory.length > 0 ? impactHistory : [{ h: '20%', d: 'M' }, { h: '30%', d: 'T' }, { h: '25%', d: 'W' }, { h: '40%', d: 'T' }, { h: '35%', d: 'F' }, { h: '28%', d: 'S' }, { h: '10%', d: 'S' }]).map((b, idx) => (
               <motion.div key={idx}
                 initial={{ height: 0 }}
                 animate={{ height: b.h }}
                 transition={{ duration: 0.8, delay: 0.5 + idx * 0.05, type: 'spring' }}
                 style={{
                   flex: 1, borderRadius: '3px 3px 0 0',
-                  background: idx === 6 ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
+                  background: idx === (impactHistory.length > 0 ? impactHistory.length - 1 : 6) ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
                   position: 'relative',
                 }}>
                 <span style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{b.d}</span>

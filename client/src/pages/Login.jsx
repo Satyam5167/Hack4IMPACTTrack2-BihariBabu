@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../App';
-import { API_BASE_URL } from '../api';
+import { API_BASE_URL } from '../apiBase';
 import { Sun, Leaf, IndianRupee, Mail, Lock, Eye, EyeOff, Zap, Link2, AlertTriangle } from 'lucide-react';
 import './Login.css';
 
@@ -215,7 +215,7 @@ export default function Login() {
           {/* Logo */}
           <Link to="/" className="left-logo" style={{ animation: 'l-fade-up .5s ease both' }}>
             <div className="logo-mark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Zap size={20} color="var(--green)" />
+              <Zap size={20} fill="#ffffff" color="#ffffff" />
             </div>
             EnergyGrid
           </Link>

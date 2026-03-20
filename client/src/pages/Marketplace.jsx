@@ -4,6 +4,7 @@ import Ticker from '../components/Ticker';
 import { sellOrders, buyOrders } from '../data';
 import { useToast } from '../contexts/ToastContext';
 import { getActiveListings, buyEnergyListing, getEnergySurplus, createEnergyListing, getMarketStats } from '../api';
+import { API_BASE_URL } from '../apiBase';
 import { getEthToInrRate, calculateEthForInr } from '../utils/currency';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../utils/contract';
@@ -52,7 +53,7 @@ export default function Marketplace() {
 
   const fetchTrades = async () => {
     try {
-       const res = await fetch('http://localhost:4000/api/energy/trades/recent', { credentials: 'include' });
+       const res = await fetch(`${API_BASE_URL}/api/energy/trades/recent`, { credentials: 'include' });
        const data = await res.json();
        if (data.trades) setRecentTrades(data.trades);
     } catch (err) {

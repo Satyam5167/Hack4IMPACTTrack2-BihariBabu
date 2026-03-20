@@ -2,26 +2,17 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../App';
-import { API_BASE_URL } from '../api';
+import { API_BASE_URL } from '../apiBase';
+import { Zap, User, ClipboardList, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, updateUser } = useAuth();
-  const [clock, setClock] = useState('--:--:--');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const activePage = location.pathname.includes('marketplace') ? 'marketplace' : location.pathname.includes('ai-forecast') ? 'ai-forecast' : 'dashboard';
 
-  useEffect(() => {
-    const updateClock = () => {
-      setClock(new Date().toTimeString().slice(0, 8));
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const activePage = location.pathname.includes('marketplace') ? 'marketplace' : location.pathname.includes('ai-forecast') ? 'ai-forecast' : 'dashboard';
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -38,18 +29,18 @@ export default function Navbar() {
       alert('Please install MetaMask!');
       return;
     }
-    
+
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const account = accounts[0];
-      
+
       const response = await fetch(`${API_BASE_URL}/api/users/wallet/link`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ wallet_address: account })
       });
-      
+
       const data = await response.json();
       if (response.ok) {
         updateUser(data.user);
@@ -77,17 +68,19 @@ export default function Navbar() {
             width: '32px', height: '32px', borderRadius: '8px',
             background: 'linear-gradient(135deg, var(--green), var(--green3))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '16px', boxShadow: '0 0 20px rgba(0,255,135,0.4)',
-          }}>⚡</div>
+            boxShadow: '0 0 20px rgba(0,255,135,0.4)',
+          }}>
+            <Zap size={16} fill="#ffffff" color="#ffffff" />
+          </div>
           <span style={{ color: 'var(--text)' }}>EnergyGrid</span>
-          
+
         </div>
 
         {/* Center: Tabs */}
-        <div className="navbar-tabs" style={{ 
-          display: 'flex', gap: '6px', 
+        <div className="navbar-tabs" style={{
+          display: 'flex', gap: '6px',
           background: 'var(--bg2)', padding: '4px', borderRadius: '10px',
-          border: '1px solid var(--border)' 
+          border: '1px solid var(--border)'
         }}>
           {[{ label: 'Dashboard', path: 'dashboard' }, { label: 'Marketplace', path: 'marketplace' }, { label: 'AI Forecast', path: 'ai-forecast' }].map(tab => {
             const isActive = activePage === tab.path;
@@ -100,20 +93,20 @@ export default function Navbar() {
                   color: isActive ? 'var(--green)' : 'var(--text2)',
                   fontSize: '13px', fontWeight: 600, border: 'none',
                   background: isActive ? 'rgba(0,255,135,0.08)' : 'transparent',
-                  transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', 
+                  transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
                   fontFamily: 'var(--body)',
                   position: 'relative'
                 }}
               >
                 {tab.label}
                 {isActive && (
-                  <motion.div 
+                  <motion.div
                     layoutId="navTab"
-                    style={{ 
-                      position: 'absolute', bottom: '-8px', left: '20%', right: '20%', 
+                    style={{
+                      position: 'absolute', bottom: '-8px', left: '20%', right: '20%',
                       height: '2px', background: 'var(--green)', borderRadius: '2px',
                       boxShadow: '0 0 8px var(--green)'
-                    }} 
+                    }}
                   />
                 )}
               </button>
@@ -123,20 +116,6 @@ export default function Navbar() {
 
         {/* Right: Actions */}
         <div className="navbar-right-full" style={{ flex: '1 0 0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginRight: '8px' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '4px 10px', borderRadius: '20px',
-              background: 'rgba(0,255,135,0.05)', border: '1px solid rgba(0,255,135,0.1)',
-              fontSize: '10px', fontWeight: 700, color: 'var(--green)',
-              fontFamily: 'var(--mono)', textTransform: 'uppercase'
-            }}>
-              <div className="live-dot" />
-              LIVE
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text2)', fontFamily: 'var(--mono)', fontWeight: 500 }}>{clock}</div>
-          </div>
-
           {/* Wallet Info / Connect */}
           {user?.wallet_address ? (
             <div style={{
@@ -168,7 +147,7 @@ export default function Navbar() {
 
           {/* Profile Dropdown Area */}
           <div style={{ position: 'relative' }}>
-            <div 
+            <div
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
@@ -209,10 +188,16 @@ export default function Navbar() {
                     display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 101,
                   }}
                 >
-                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='var(--card)'} onMouseOut={e => e.target.style.background='transparent'}>🧑‍💻 Profile</button>
-                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/orders'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='var(--card)'} onMouseOut={e => e.target.style.background='transparent'}>📋 Order History</button>
+                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseOver={e => e.target.style.background = 'var(--card)'} onMouseOut={e => e.target.style.background = 'transparent'}>
+                    <User size={14} /> Profile
+                  </button>
+                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/orders'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseOver={e => e.target.style.background = 'var(--card)'} onMouseOut={e => e.target.style.background = 'transparent'}>
+                    <ClipboardList size={14} /> Order History
+                  </button>
                   <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
-                  <button onClick={() => { setProfileDropdownOpen(false); logout(); }} style={{ padding: '10px 12px', background: 'rgba(255,59,48,0.06)', border: 'none', color: 'var(--red)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='rgba(255,59,48,0.1)'} onMouseOut={e => e.target.style.background='rgba(255,59,48,0.06)'}>🚪 Sign Out</button>
+                  <button onClick={() => { setProfileDropdownOpen(false); logout(); }} style={{ padding: '10px 12px', background: 'rgba(255,59,48,0.06)', border: 'none', color: 'var(--red)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseOver={e => e.target.style.background = 'rgba(255,59,48,0.1)'} onMouseOut={e => e.target.style.background = 'rgba(255,59,48,0.06)'}>
+                    <LogOut size={14} /> Sign Out
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -250,18 +235,18 @@ export default function Navbar() {
       {/* Mobile dropdown menu */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             style={{
-            position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 99,
-            background: 'rgba(10,16,22,0.98)', borderBottom: '1px solid var(--border)',
-            backdropFilter: 'blur(16px)', padding: '16px 20px',
-            display: 'flex', flexDirection: 'column', gap: '8px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          }}>
+              position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 99,
+              background: 'rgba(10,16,22,0.98)', borderBottom: '1px solid var(--border)',
+              backdropFilter: 'blur(16px)', padding: '16px 20px',
+              display: 'flex', flexDirection: 'column', gap: '8px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}>
             {/* User info */}
             <div style={{ padding: '10px 12px', background: 'var(--card)', borderRadius: '10px', marginBottom: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '12px', fontWeight: 600 }}>{user?.name || 'Guest'}</div>
@@ -287,17 +272,33 @@ export default function Navbar() {
               >{tab.label}</button>
             ))}
 
-            {/* Live badge */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '10px 14px', borderRadius: '8px',
-              background: 'rgba(0,255,135,0.05)',
-              fontSize: '11px', fontWeight: 600, color: 'var(--green)',
-              fontFamily: 'var(--mono)',
-            }}>
-              <div className="live-dot" />
-              LIVE · {clock}
-            </div>
+            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+
+            <button
+              onClick={() => handleNav('/profile')}
+              style={{
+                padding: '12px 16px', borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
+                color: 'var(--text)', fontSize: '14px', fontWeight: 500, border: 'none',
+                background: 'var(--card)', fontFamily: 'var(--body)', width: '100%',
+                display: 'flex', alignItems: 'center', gap: '10px'
+              }}
+            >
+              <User size={16} /> Profile
+            </button>
+
+            <button
+              onClick={() => handleNav('/orders')}
+              style={{
+                padding: '12px 16px', borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
+                color: 'var(--text)', fontSize: '14px', fontWeight: 500, border: 'none',
+                background: 'var(--card)', fontFamily: 'var(--body)', width: '100%',
+                display: 'flex', alignItems: 'center', gap: '10px'
+              }}
+            >
+              <ClipboardList size={16} /> Order History
+            </button>
+
+            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
 
             {/* Logout */}
             <motion.button

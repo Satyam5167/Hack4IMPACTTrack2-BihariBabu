@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../App';
 import { useToast } from '../contexts/ToastContext';
 import { getForecast, getSolarPanel } from '../api';
+import ForecastChart from '../components/ForecastChart';
 
 // ── Confidence Badge ───────────────────────────────────────────────
 function ConfidenceBadge({ value }) {
@@ -21,59 +22,12 @@ function ConfidenceBadge({ value }) {
   );
 }
 
-// ── 48h Bar Chart ─────────────────────────────────────────────────
-function HourChart({ forecast }) {
-  if (!forecast?.length) return null;
-  const maxY = Math.max(...forecast.map(h => h.yhat), 0.1);
-
-  return (
-    <div style={{ overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '80px', padding: '0 4px' }}>
-        {forecast.map((h, i) => {
-          const pct  = (h.yhat / maxY) * 100;
-          const conf = h.confidence;
-          const color = conf >= 80 ? 'var(--green)' : conf >= 60 ? 'var(--amber)' : 'var(--red)';
-          const hour  = new Date(h.hour).getHours();
-          const isNight = hour < 6 || hour >= 20;
-          return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: `${Math.max(isNight ? 0 : 2, pct)}%` }}
-                transition={{ duration: 0.6, delay: i * 0.01, type: 'spring', bounce: 0 }}
-                style={{
-                  width: '100%', borderRadius: '3px 3px 0 0',
-                  background: isNight ? 'rgba(255,255,255,0.04)' : color,
-                  opacity: isNight ? 1 : 0.7 + (conf / 333),
-                  minHeight: '2px',
-                  boxShadow: isNight ? 'none' : `0 0 6px ${color}60`,
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div style={{ display: 'flex', padding: '4px 4px 0' }}>
-        {forecast.map((h, i) => {
-          const hour = new Date(h.hour).getHours();
-          const show = i % 6 === 0;
-          return (
-            <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '9px', color: 'var(--text3)', fontFamily: 'var(--mono)', opacity: show ? 1 : 0 }}>
-              {show ? `${String(hour).padStart(2, '0')}h` : ''}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ── Gate screen ───────────────────────────────────────────────────
 function IncompleteGate({ missing }) {
   const navigate = useNavigate();
   const items = [
     { icon: MapPin, label: 'Location', desc: 'Your city for irradiance data', done: missing === 'panel' },
-    { icon: Zap,    label: 'Panel Specs', desc: 'kW, tilt, azimuth, efficiency', done: missing === 'location' },
+    { icon: Zap, label: 'Panel Specs', desc: 'kW, tilt, azimuth, efficiency', done: missing === 'location' },
   ];
 
   return (
@@ -126,13 +80,13 @@ export default function AIForecast() {
   const load = useCallback(async () => {
     setState('loading');
     try {
-      const panelRes  = await getSolarPanel();
+      const panelRes = await getSolarPanel();
       const hasLocation = !!user?.location;
-      const hasPanel    = !!panelRes.panel;
+      const hasPanel = !!panelRes.panel;
 
-      if (!hasLocation && !hasPanel) { setState('gate'); setGateMissing('both');     return; }
-      if (!hasLocation)              { setState('gate'); setGateMissing('location'); return; }
-      if (!hasPanel)                 { setState('gate'); setGateMissing('panel');    return; }
+      if (!hasLocation && !hasPanel) { setState('gate'); setGateMissing('both'); return; }
+      if (!hasLocation) { setState('gate'); setGateMissing('location'); return; }
+      if (!hasPanel) { setState('gate'); setGateMissing('panel'); return; }
 
       const forecastRes = await getForecast();
 
@@ -160,8 +114,8 @@ export default function AIForecast() {
 
   // ── Loading skeleton ───────────────────────────────────────────
   if (state === 'loading') return (
-    <div style={{ padding: '32px 28px', maxWidth: '1100px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+    <div className="page-pad" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <div className="dash-grid-4" style={{ marginBottom: '20px' }}>
         {Array(4).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: '90px', borderRadius: '14px' }} />)}
       </div>
       <div className="skeleton" style={{ height: '160px', borderRadius: '14px', marginBottom: '20px' }} />
@@ -169,7 +123,7 @@ export default function AIForecast() {
     </div>
   );
 
-  if (state === 'gate')  return <IncompleteGate missing={gateMissing} />;
+  if (state === 'gate') return <IncompleteGate missing={gateMissing} />;
 
   // ── Error state ────────────────────────────────────────────────
   if (state === 'error') return (
@@ -192,38 +146,44 @@ export default function AIForecast() {
   const next48 = forecast ?? [];
 
   const statCards = [
-    { label: '48h Predicted', value: `${summary.total_predicted_kwh} kWh`, icon: Zap,       color: 'var(--green)' },
-    { label: 'Avg Confidence', value: `${summary.avg_confidence_pct}%`,   icon: Target,     color: 'var(--teal)' },
-    { label: 'Peak Hour',      value: new Date(summary.peak_hour).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), icon: Star, color: 'var(--amber)' },
-    { label: 'Peak Output',    value: `${summary.peak_kwh} kWh`,          icon: TrendingUp, color: 'var(--purple)' },
+    { label: '48h Predicted', value: `${summary.total_predicted_kwh} kWh`, icon: Zap, color: 'var(--green)' },
+    { label: 'Avg Confidence', value: `${summary.avg_confidence_pct}%`, icon: Target, color: 'var(--teal)' },
+    { label: 'Peak Hour', value: new Date(summary.peak_hour).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), icon: Star, color: 'var(--amber)' },
+    { label: 'Peak Output', value: `${summary.peak_kwh} kWh`, icon: TrendingUp, color: 'var(--purple)' },
   ];
 
   return (
-    <motion.div className="page-pad" style={{ padding: '24px 28px', maxWidth: '1100px', margin: '0 auto' }}
+    <motion.div className="page-pad" style={{ maxWidth: '1100px', margin: '0 auto' }}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
     >
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--green2), var(--teal))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0,255,135,0.3)' }}>
-            <Bot size={18} color="#001a0a" />
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--green2), var(--teal))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0,255,135,0.3)' }}>
+              <Bot size={18} color="#001a0a" />
+            </div>
+            <h1 style={{ fontFamily: 'var(--display)', fontSize: '22px', fontWeight: 700 }}>AI Solar Forecast</h1>
           </div>
-          <h1 style={{ fontFamily: 'var(--display)', fontSize: '22px', fontWeight: 700 }}>AI Solar Forecast</h1>
           <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', background: 'rgba(0,255,135,0.08)', color: 'var(--green)', border: '1px solid rgba(0,255,135,0.2)', fontFamily: 'var(--mono)', fontWeight: 600 }}>LIVE · 48H</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text2)', fontSize: '12px' }}>
-          <MapPin size={12} />
-          <span>{location}</span>
-          <span style={{ margin: '0 4px', color: 'var(--border)' }}>·</span>
-          <Zap size={12} />
-          <span>{panel_kw} kW panel</span>
-          <span style={{ margin: '0 4px', color: 'var(--border)' }}>·</span>
-          <span>pvlib + scipy</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text2)', fontSize: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={12} />
+            <span>{location}</span>
+          </div>
+          <span style={{ margin: '0 2px', color: 'var(--border)', opacity: 0.5 }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Zap size={12} />
+            <span>{panel_kw} kW panel</span>
+          </div>
+          <span style={{ margin: '0 2px', color: 'var(--border)', opacity: 0.5 }}>|</span>
+          <span style={{ opacity: 0.8 }}>pvlib AI</span>
         </div>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '20px' }} className="dash-grid-4">
+      <div className="dash-grid-4" style={{ marginBottom: '20px' }}>
         {statCards.map((s, i) => {
           const Icon = s.icon;
           return (
@@ -243,75 +203,10 @@ export default function AIForecast() {
         })}
       </div>
 
-      {/* Chart */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-        style={{ ...card, marginBottom: '20px' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <span style={{ fontFamily: 'var(--display)', fontSize: '14px', fontWeight: 600 }}>48-Hour Production Chart</span>
-          <div style={{ display: 'flex', gap: '14px', fontSize: '11px', color: 'var(--text3)', fontFamily: 'var(--mono)', alignItems: 'center' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--green)', display: 'inline-block' }} />High</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--amber)', display: 'inline-block' }} />Medium</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--red)', display: 'inline-block' }} />Low</span>
-          </div>
-        </div>
-        <HourChart forecast={next48} />
-      </motion.div>
 
-      {/* Forecast Table */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} style={card}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Clock size={15} color="var(--text2)" />
-          <span style={{ fontFamily: 'var(--display)', fontSize: '14px', fontWeight: 600 }}>Hourly Forecast — Next 48 Hours</span>
-        </div>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '580px' }}>
-            <thead>
-              <tr>
-                {[
-                  { label: 'Hour',           icon: Clock       },
-                  { label: 'Predicted (kWh)', icon: Zap        },
-                  { label: 'Min',             icon: null       },
-                  { label: 'Max',             icon: null       },
-                  { label: 'Confidence',      icon: Target     },
-                  { label: 'Cloud',           icon: Cloud      },
-                  { label: 'Temp',            icon: Thermometer},
-                ].map(({ label, icon: Icon }) => (
-                  <th key={label} style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 500, padding: '8px 12px', borderBottom: '1px solid var(--border)', textAlign: 'left', fontFamily: 'var(--mono)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      {Icon && <Icon size={10} />}{label}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {next48.map((h, i) => {
-                const dt      = new Date(h.hour);
-                const isNow   = i === 0;
-                const isNight = dt.getHours() < 6 || dt.getHours() >= 20;
-                return (
-                  <tr key={i} style={{
-                    borderBottom: i === next48.length - 1 ? 'none' : '1px solid rgba(30,45,61,0.4)',
-                    background: isNow ? 'rgba(0,255,135,0.03)' : 'transparent',
-                    opacity: isNight ? 0.5 : 1,
-                  }}>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '11px', color: isNow ? 'var(--green)' : 'var(--text2)', whiteSpace: 'nowrap' }}>
-                      {isNow && <span style={{ marginRight: '4px', color: 'var(--green)' }}>▶</span>}
-                      {dt.toLocaleDateString([], { month: 'short', day: 'numeric' })} {dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green)', fontWeight: 700 }}>{h.yhat.toFixed(3)}</td>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text2)' }}>{h.yhat_lower.toFixed(3)}</td>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text2)' }}>{h.yhat_upper.toFixed(3)}</td>
-                    <td style={{ padding: '8px 12px' }}><ConfidenceBadge value={h.confidence} /></td>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)' }}>{h.cloud_cover}%</td>
-                    <td style={{ padding: '8px 12px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text2)' }}>{h.temperature}°C</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* Interactive Forecast Chart */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} style={{ marginBottom: '20px' }}>
+        <ForecastChart forecast={next48} />
       </motion.div>
     </motion.div>
   );

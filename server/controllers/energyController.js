@@ -308,3 +308,83 @@ export const getMarketStats = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+export const getPoolStats = async (req, res) => {
+  try {
+    const [totalRes, todayRes] = await Promise.all([
+      pool.query('SELECT SUM(produced_amount) as p, SUM(consumed_amount) as c FROM energy_readings'),
+      pool.query("SELECT SUM(produced_amount) as p, SUM(consumed_amount) as c FROM energy_readings WHERE recorded_at > NOW() - INTERVAL '24 hours'")
+    ]);
+
+    const totalProduced = +(totalRes.rows[0]?.p || 0);
+    const totalConsumed = +(totalRes.rows[0]?.c || 0);
+    const todayProduced = +(todayRes.rows[0]?.p || 0);
+    const todayConsumed = +(todayRes.rows[0]?.c || 0);
+
+    // Stored is the net surplus across the community
+    const stored = Math.max(0, totalProduced - totalConsumed);
+    const capacity = 500; // Community target capacity
+
+    res.json({
+      stored: +stored.toFixed(1),
+      capacity,
+      percentage: Math.min(100, Math.floor((stored / capacity) * 100)),
+      inboundToday: +todayProduced.toFixed(1),
+      outboundToday: +todayConsumed.toFixed(1)
+    });
+  } catch (error) {
+    console.error('Get pool stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getImpactStats = async (req, res) => {
+  try {
+    const dailyQuery = `
+      SELECT 
+        DATE(recorded_at) as date,
+        SUM(produced_amount) as amount 
+      FROM energy_readings 
+      WHERE user_id = $1 AND recorded_at > NOW() - INTERVAL '7 days'
+      GROUP BY DATE(recorded_at)
+      ORDER BY DATE(recorded_at) ASC
+    `;
+    const result = await pool.query(dailyQuery, [req.userId]);
+    
+    // Generate the last 7 days array
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' })[0]; // 'M', 'T', 'W', etc.
+      last7Days.push({ dateStr, dayLabel, amount: 0 });
+    }
+
+    // Map result rows to the dates
+    result.rows.forEach(r => {
+      // PostgreSQL DATE(recorded_at) might include local time format, so we use string slice
+      const rDate = new Date(r.date);
+      // to avoid timezone issues when converting to ISOString, just take local YYYY-MM-DD
+      const rDateStr = new Date(rDate.getTime() - (rDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      
+      const match = last7Days.find(d => d.dateStr === rDateStr);
+      if (match) {
+        match.amount = parseFloat(r.amount);
+      }
+    });
+
+    const maxVal = Math.max(...last7Days.map(r => r.amount * 0.45), 1);
+
+    const history = last7Days.map(r => ({
+      d: r.dayLabel,
+      h: Math.max(5, (r.amount * 0.45 / maxVal) * 90).toFixed(0) + '%'
+    }));
+
+    res.json({ history });
+  } catch (error) {
+    console.error('Get impact stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+

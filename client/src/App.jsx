@@ -14,7 +14,7 @@ import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import AIForecast from './pages/AIForecast';
 import { ToastProvider, useToast } from './contexts/ToastContext';
-import { API_BASE_URL } from './api';
+import { API_BASE_URL } from './apiBase';
 import BackgroundCanvas from './components/BackgroundCanvas';
 import CustomCursor from './components/CustomCursor';
 
