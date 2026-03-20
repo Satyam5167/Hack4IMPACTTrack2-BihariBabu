@@ -37,12 +37,12 @@ export default function Dashboard() {
       setLoading(true);
       const res = await getEnergySurplus();
       if (res.produced !== undefined) {
-         setStats({
-           prod: +res.produced,
-           cons: +res.consumed,
-           surplus: +res.surplus,
-           co2: +(+res.produced * 0.45).toFixed(1) // 0.45 kg of CO2 saved per kWh produced
-         });
+        setStats({
+          prod: +res.produced,
+          cons: +res.consumed,
+          surplus: +res.surplus,
+          co2: +(+res.produced * 0.45).toFixed(1) // 0.45 kg of CO2 saved per kWh produced
+        });
       }
 
       // Fetch trades
@@ -51,9 +51,11 @@ export default function Dashboard() {
         const mappedTrades = tradesRes.trades.map(t => ({
           time: new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           seller: t.seller_name,
-          sellerColor: '#ef4444', // Tailwind red-500 equivalent
+          sellerPic: t.seller_picture,
+          sellerColor: '#ef4444',
           buyer: t.buyer_name,
-          buyerColor: '#3b82f6', // Tailwind blue-500 equivalent
+          buyerPic: t.buyer_picture,
+          buyerColor: '#3b82f6',
           units: t.amount_kwh,
           price: t.price_inr,
           co2: (parseFloat(t.amount_kwh) * 0.45).toFixed(1),
@@ -118,14 +120,14 @@ export default function Dashboard() {
 
   return (
     <motion.div className="page-pad" style={{ padding: '24px 28px' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      
+
       {/* Dashboard Header */}
       <div className="dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '20px', flexWrap: 'wrap' }}>
         <div style={{ minWidth: '200px' }}>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '4px' }}>System Overview</h1>
           <p style={{ fontSize: '12px', color: 'var(--text2)' }}>Live energy monitoring and P2P trading activity</p>
         </div>
-        
+
         <div className="dash-header-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <motion.button
             whileHover={{ scale: 1.05, translateY: -2 }}
@@ -167,15 +169,15 @@ export default function Dashboard() {
           const c = colorMap[s.color];
           const isListing = s.action === 'List ↗';
           return (
-            <motion.div key={i} variants={item} className="stat-card" 
+            <motion.div key={i} variants={item} className="stat-card"
               whileHover={{ y: -8, scale: 1.03, borderColor: 'var(--border2)' }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
               style={{
-              background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: '14px', padding: '18px 20px',
-              position: 'relative', overflow: 'hidden',
-              cursor: 'default',
-            }}
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '14px', padding: '18px 20px',
+                position: 'relative', overflow: 'hidden',
+                cursor: 'default',
+              }}
             >
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', borderRadius: '14px 0 0 14px', background: c.border }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
@@ -196,13 +198,13 @@ export default function Dashboard() {
                   <span style={{ fontSize: '10px', color: 'var(--text3)' }}>Cumulative data</span>
                 )}
                 {s.action && (
-                  <motion.button 
-                    whileHover={{ scale: 1.1, x: 5 }} 
+                  <motion.button
+                    whileHover={{ scale: 1.1, x: 5 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => isListing ? setListModalOpen(true) : setModalOpen(true)}
                     style={{
-                      background: isListing ? 'var(--amber)' : 'rgba(245,158,11,0.1)', 
-                      color: isListing ? '#1a1000' : 'var(--amber)', 
+                      background: isListing ? 'var(--amber)' : 'rgba(245,158,11,0.1)',
+                      color: isListing ? '#1a1000' : 'var(--amber)',
                       border: isListing ? 'none' : '1px solid rgba(245,158,11,0.2)',
                       borderRadius: '8px', padding: '6px 12px', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
                       boxShadow: isListing ? '0 4px 12px rgba(245,158,11,0.2)' : 'none'
@@ -233,11 +235,11 @@ export default function Dashboard() {
               <div style={{ position: 'relative', width: '140px', height: '80px' }}>
                 <svg width="140" height="80" viewBox="0 0 140 80">
                   <path d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="var(--border2)" strokeWidth="10" strokeLinecap="round" />
-                  <motion.path 
+                  <motion.path
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 1.5, type: 'spring', bounce: 0, delay: 0.5 }}
-                    d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="173" strokeDashoffset="35" 
+                    d="M 15 75 A 55 55 0 0 1 125 75" fill="none" stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="173" strokeDashoffset="35"
                   />
                   <defs>
                     <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -283,15 +285,15 @@ export default function Dashboard() {
             <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Daily savings</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '36px' }}>
               {[{ h: '50%', d: 'M' }, { h: '65%', d: 'T' }, { h: '45%', d: 'W' }, { h: '80%', d: 'T' }, { h: '70%', d: 'F' }, { h: '55%', d: 'S' }, { h: '90%', d: 'S' }].map((b, idx) => (
-                <motion.div key={idx} 
+                <motion.div key={idx}
                   initial={{ height: 0 }}
                   animate={{ height: b.h }}
                   transition={{ duration: 0.8, delay: 0.5 + idx * 0.05, type: 'spring' }}
                   style={{
-                  flex: 1, borderRadius: '3px 3px 0 0',
-                  background: idx === 6 ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
-                  position: 'relative',
-                }}>
+                    flex: 1, borderRadius: '3px 3px 0 0',
+                    background: idx === 6 ? 'rgba(0,229,204,0.7)' : 'rgba(0,229,204,0.25)',
+                    position: 'relative',
+                  }}>
                   <span style={{ position: 'absolute', bottom: '-14px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{b.d}</span>
                 </motion.div>
               ))}
@@ -313,68 +315,76 @@ export default function Dashboard() {
             }}>10 TRADES</span>
           </div>
           <div className="trade-table-wrap">
-          <table className="trade-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {['Time', 'Seller', 'Buyer', 'Units', 'Price', 'CO₂', 'TX Hash', 'Status'].map(h => (
-                  <th key={h} style={{
-                    fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase',
-                    letterSpacing: '0.6px', fontWeight: 500, padding: '10px 14px',
-                    borderBottom: '1px solid var(--border)', textAlign: 'left',
-                  }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? Array(5).fill(0).map((_, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid rgba(30,45,61,0.4)' }}>
-                  <td colSpan="8" style={{ padding: '10px 14px' }}>
-                    <div className="skeleton" style={{ width: '100%', height: '20px' }}></div>
-                  </td>
+            <table className="trade-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['Time', 'Seller', 'Buyer', 'Units', 'Price', 'CO₂', 'TX Hash', 'Status'].map(h => (
+                    <th key={h} style={{
+                      fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase',
+                      letterSpacing: '0.6px', fontWeight: 500, padding: '10px 14px',
+                      borderBottom: '1px solid var(--border)', textAlign: 'left',
+                    }}>{h}</th>
+                  ))}
                 </tr>
-              )) : recentTrades.map((t, i) => (
-                <motion.tr key={i} 
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)', scale: 1.01, originX: 0 }}
-                  transition={{ delay: i * 0.05, type: "spring", stiffness: 300, damping: 25 }}
-                  style={{
-                  borderBottom: i === recentTrades.length - 1 ? 'none' : '1px solid rgba(30,45,61,0.4)',
-                }}
-                >
-                  <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--text3)' }}>{t.time}</td>
-                  <td style={{ padding: '10px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: 'white', background: t.sellerColor, flexShrink: 0 }}>{t.seller[0]}</div>
-                      <span>{t.seller}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: 'white', background: t.buyerColor, flexShrink: 0 }}>{t.buyer[0]}</div>
-                      <span>{t.buyer}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--amber)' }}>{t.units}</td>
-                  <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green)' }}>₹{t.price}</td>
-                  <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green3)' }}>{t.co2} kg</td>
-                  <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)', cursor: 'pointer' }}
-                    onClick={() => { navigator.clipboard?.writeText(t.fullHash).catch(() => { }); showToast('✓', 'TX hash copied to clipboard'); }}
-                    title="Click to copy"
-                  >{t.hash}</td>
-                  <td style={{ padding: '10px 14px' }}>
-                    <span style={{
-                      fontSize: '10px', padding: '3px 8px', borderRadius: '20px',
-                      fontFamily: 'var(--mono)', fontWeight: 500, display: 'inline-block',
-                      ...(t.status === 'Settled'
-                        ? { background: 'rgba(0,255,135,0.08)', color: 'var(--green)', border: '1px solid rgba(0,255,135,0.2)' }
-                        : { background: 'rgba(245,158,11,0.08)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)' }),
-                    }}>{t.status}</span>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? Array(5).fill(0).map((_, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(30,45,61,0.4)' }}>
+                    <td colSpan="8" style={{ padding: '10px 14px' }}>
+                      <div className="skeleton" style={{ width: '100%', height: '20px' }}></div>
+                    </td>
+                  </tr>
+                )) : recentTrades.map((t, i) => (
+                  <motion.tr key={i}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)', scale: 1.01, originX: 0 }}
+                    transition={{ delay: i * 0.05, type: "spring", stiffness: 300, damping: 25 }}
+                    style={{
+                      borderBottom: i === recentTrades.length - 1 ? 'none' : '1px solid rgba(30,45,61,0.4)',
+                    }}
+                  >
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--text3)' }}>{t.time}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {t.sellerPic ? (
+                          <img src={t.sellerPic} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} alt="" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'white', background: t.sellerColor, flexShrink: 0 }}>{t.seller[0]}</div>
+                        )}
+                        <span>{t.seller}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {t.buyerPic ? (
+                          <img src={t.buyerPic} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} alt="" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'white', background: t.buyerColor, flexShrink: 0 }}>{t.buyer[0]}</div>
+                        )}
+                        <span>{t.buyer}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--amber)' }}>{t.units}</td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green)' }}>₹{t.price}</td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green3)' }}>{t.co2} kg</td>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)', cursor: 'pointer' }}
+                      onClick={() => { navigator.clipboard?.writeText(t.fullHash).catch(() => { }); showToast('✓', 'TX hash copied to clipboard'); }}
+                      title="Click to copy"
+                    >{t.hash}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{
+                        fontSize: '10px', padding: '3px 8px', borderRadius: '20px',
+                        fontFamily: 'var(--mono)', fontWeight: 500, display: 'inline-block',
+                        ...(t.status === 'Settled'
+                          ? { background: 'rgba(0,255,135,0.08)', color: 'var(--green)', border: '1px solid rgba(0,255,135,0.2)' }
+                          : { background: 'rgba(245,158,11,0.08)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)' }),
+                      }}>{t.status}</span>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -398,14 +408,18 @@ export default function Dashboard() {
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
               >
                 <span style={{ fontSize: '11px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--text3)', width: '16px', fontFamily: 'var(--mono)' }}>{i === 0 ? '👑' : i + 1}</span>
-                <div style={{ width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: 'white', background: l.color }}>{l.name[0]}</div>
+                {l.picture ? (
+                  <img src={l.picture} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} alt="" referrerPolicy="no-referrer" />
+                ) : (
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: 'white', background: l.color }}>{l.name[0]}</div>
+                )}
                 <span style={{ flex: 1, fontSize: '12px', fontWeight: 500 }}>{l.name}</span>
                 <div style={{ width: '50px', height: '4px', background: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${l.score}%` }}
                     transition={{ duration: 1, delay: 0.5 + i * 0.1, type: 'spring' }}
-                    style={{ height: '4px', borderRadius: '2px', background: 'linear-gradient(90deg, var(--green2), var(--green3))' }} 
+                    style={{ height: '4px', borderRadius: '2px', background: 'linear-gradient(90deg, var(--green2), var(--green3))' }}
                   />
                 </div>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: 600, color: 'var(--green)' }}>{l.score}</span>
@@ -417,9 +431,9 @@ export default function Dashboard() {
 
       <Ticker />
 
-      <RecordEnergyModal 
-        isOpen={modalOpen} 
-        onClose={() => setModalOpen(false)} 
+      <RecordEnergyModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
         onFinish={fetchRealData}
       />
 

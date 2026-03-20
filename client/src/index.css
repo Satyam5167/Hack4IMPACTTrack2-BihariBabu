@@ -31,7 +31,9 @@
   cursor: none !important;
 }
 
-a, button, input {
+a,
+button,
+input {
   cursor: none !important;
 }
 
@@ -61,8 +63,13 @@ body {
 
 /* Grid lines overlay */
 @keyframes grid-pan {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(48px); }
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(48px);
+  }
 }
 
 body::before {
@@ -76,8 +83,8 @@ body::before {
   pointer-events: none;
   z-index: 0;
   animation: grid-pan 15s linear infinite;
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 100%);
 }
 
 /* Noise overlay */
@@ -229,12 +236,17 @@ body::after {
 
 /* ── Skeleton Loading ── */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.02) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: 4px;
@@ -353,18 +365,39 @@ body::after {
 
 /* ── Floating hero cards ── */
 @keyframes lp-float-y {
-  0%,100% { transform: translateY(0) rotate(var(--rot,0deg)); }
-  50% { transform: translateY(-12px) rotate(var(--rot,0deg)); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(var(--rot, 0deg));
+  }
 }
 
 @keyframes lp-pop-in {
-  from { transform: scale(0); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes lp-feed-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lp-float {
@@ -503,46 +536,101 @@ body::after {
    ══════════════════════════════════════════════ */
 
 /* --- Responsive grid helpers (these override inline styles via className) --- */
-.dash-grid-4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.dash-grid-2  { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
-.dash-grid-bottom { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
-.market-grid  { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
-.market-bar   { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.dash-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+}
+
+.dash-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+}
+
+.market-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
 
 /* Trade table — always scrollable on parent */
-.trade-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.trade-table      { min-width: 600px; }
+.trade-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trade-table {
+  min-width: 600px;
+}
 
 /* ────────────────────────
    ≤ 1200px  (large tablet)
    ──────────────────────── */
 @media (max-width: 1200px) {
-  .dash-grid-4    { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ────────────────────────
    ≤ 960px  (tablet)
    ──────────────────────── */
 @media (max-width: 960px) {
-  .dash-grid-2    { grid-template-columns: 1fr; }
-  .dash-grid-bottom { grid-template-columns: 1fr; }
-  .market-grid    { grid-template-columns: 1fr; }
+  .dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-grid-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ────────────────────────
    ≤ 768px  (large phone)
    ──────────────────────── */
 @media (max-width: 768px) {
+
   /* --- Page padding --- */
-  .page-pad { padding: 14px 14px !important; }
+  .page-pad {
+    padding: 14px 14px !important;
+  }
 
   /* --- Navbar (class-based hiding) --- */
-  .navbar-tabs        { display: none !important; }
-  .navbar-right-full  { display: none !important; }
-  .navbar-mobile-menu { display: flex !important; }
+  .navbar-tabs {
+    display: none !important;
+  }
+
+  .navbar-right-full {
+    display: none !important;
+  }
+
+  .navbar-mobile-menu {
+    display: flex !important;
+  }
 
   /* --- Dashboard stat cards — 2 col --- */
-  .dash-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .dash-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 
   /* --- Market bar: wrap items into a 2×col mini-grid --- */
   .market-bar {
@@ -550,13 +638,17 @@ body::after {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
+
   /* Hide the vertical pipe separators inside market-bar on mobile */
-  .market-bar > div > div:first-child[style*="width: 1px"] { display: none; }
+  .market-bar>div>div:first-child[style*="width: 1px"] {
+    display: none;
+  }
 
   /* --- Marketplace order book: stack sell/buy vertically --- */
   .order-book-grid {
     grid-template-columns: 1fr !important;
   }
+
   /* Hide the spread row spans correctly on 1-col */
   .order-book-spread {
     grid-column: 1 !important;
@@ -567,29 +659,47 @@ body::after {
    ≤ 480px  (small phone)
    ──────────────────────── */
 @media (max-width: 480px) {
+
   /* --- Stat cards: single column --- */
-  .dash-grid-4 { grid-template-columns: 1fr; }
+  .dash-grid-4 {
+    grid-template-columns: 1fr;
+  }
 
   /* --- Market bar: single column --- */
-  .market-bar { grid-template-columns: 1fr; }
+  .market-bar {
+    grid-template-columns: 1fr;
+  }
 
   /* --- Stat card internals --- */
-  .stat-card { padding: 14px 16px !important; }
+  .stat-card {
+    padding: 14px 16px !important;
+  }
 
   /* --- Market bar item separators — hide on mobile --- */
-  .market-bar-sep { display: none; }
+  .market-bar-sep {
+    display: none;
+  }
 
   /* --- Dashboard mid panel pool gauge: shrink gauge --- */
-  .pool-gauge-svg { width: 110px !important; height: 66px !important; }
+  .pool-gauge-svg {
+    width: 110px !important;
+    height: 66px !important;
+  }
 
   /* --- Fonts: slightly larger for readability --- */
   .page-pad .trade-table td,
-  .page-pad .trade-table th { padding: 8px 10px !important; font-size: 11px !important; }
+  .page-pad .trade-table th {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
 }
 
 /* Ticker — always full width, no overflow issues */
-.ticker-wrap { overflow: hidden; width: 100%; }
- 
+.ticker-wrap {
+  overflow: hidden;
+  width: 100%;
+}
+
 /* --- Dashboard Header & Button Responsiveness --- */
 @media (max-width: 640px) {
   .dash-header {
@@ -597,7 +707,7 @@ body::after {
     align-items: stretch !important;
     gap: 16px !important;
   }
-  
+
   .dash-header-actions {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;

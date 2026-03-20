@@ -1,5 +1,5 @@
 import express from 'express';
-import { recordReading, getSurplus, getReadings, createListing, getUserListings, getAllActiveListings, buyListing, getUserOrders, getRecentTrades, getTopTraders } from '../controllers/energyController.js';
+import { recordReading, getSurplus, getReadings, createListing, getUserListings, getAllActiveListings, buyListing, getUserOrders, getRecentTrades, getTopTraders, getMarketStats } from '../controllers/energyController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -16,5 +16,6 @@ router.post('/listings/buy', buyListing);
 router.get('/orders', getUserOrders);
 router.get('/trades/recent', getRecentTrades);
 router.get('/trades/top', getTopTraders);
+router.get('/stats', getMarketStats);
 
 export default router;

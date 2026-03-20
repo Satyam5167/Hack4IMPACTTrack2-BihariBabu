@@ -41,3 +41,13 @@ CREATE TABLE transactions (
   status TEXT DEFAULT 'completed',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE bids (
+        id SERIAL PRIMARY KEY,
+        listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        amount NUMERIC(10, 2) NOT NULL,
+        price_per_unit NUMERIC(10, 2) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )

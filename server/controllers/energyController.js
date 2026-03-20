@@ -65,7 +65,7 @@ export const getReadings = async (req, res) => {
 };
 
 export const createListing = async (req, res) => {
-  const { amount, price_per_unit } = req.body;
+  const { amount, price_per_unit, type = 'sell' } = req.body;
 
   if (!amount || !price_per_unit) {
     return res.status(400).json({ error: 'Amount and price are required' });
@@ -89,12 +89,12 @@ export const createListing = async (req, res) => {
     const availableSurplus = produced - consumed + bought - sold - lockedAmount;
 
     if (amount > availableSurplus) {
-       return res.status(400).json({ error: `Insufficient surplus. Available: ${Math.max(0, availableSurplus).toFixed(1)} kWh` });
+      return res.status(400).json({ error: `Insufficient surplus. Available: ${Math.max(0, availableSurplus).toFixed(1)} kWh` });
     }
 
     const newListing = await pool.query(
-      'INSERT INTO listings (user_id, amount, price_per_unit) VALUES ($1, $2, $3) RETURNING *',
-      [req.userId, amount, price_per_unit]
+      'INSERT INTO listings (user_id, amount, price_per_unit, type) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.userId, amount, price_per_unit, type]
     );
 
     res.status(201).json({ listing: newListing.rows[0], message: 'Listing created successfully' });
@@ -119,9 +119,14 @@ export const getUserListings = async (req, res) => {
 
 export const getAllActiveListings = async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT l.*, u.name as seller_name, u.wallet_address as seller_wallet FROM listings l JOIN users u ON l.user_id = u.id WHERE l.status = 'active' ORDER BY l.price_per_unit ASC"
-    );
+    const query = `
+      SELECT l.*, u.name as seller_name, u.wallet_address as seller_wallet, u.picture as seller_picture
+      FROM listings l
+      JOIN users u ON l.user_id = u.id
+      WHERE l.status = 'active'
+      ORDER BY l.created_at DESC
+    `;
+    const result = await pool.query(query);
     res.json({ listings: result.rows });
   } catch (error) {
     console.error('Get all listings error:', error);
@@ -131,7 +136,7 @@ export const getAllActiveListings = async (req, res) => {
 
 export const buyListing = async (req, res) => {
   const { listingId, ethAmount, txHash, amountKwhToBuy } = req.body;
-  
+
   if (!listingId || !ethAmount || !txHash || !amountKwhToBuy) {
     return res.status(400).json({ error: 'listingId, ethAmount, txHash, and amountKwhToBuy are mandatory' });
   }
@@ -160,26 +165,26 @@ export const buyListing = async (req, res) => {
     const buyerRes = await pool.query("SELECT wallet_address FROM users WHERE id = $1", [req.userId]);
     const buyerWallet = buyerRes.rows[0]?.wallet_address;
     if (!buyerWallet) {
-       return res.status(400).json({ error: 'Please connect your wallet first' });
+      return res.status(400).json({ error: 'Please connect your wallet first' });
     }
 
     // 3.8 Validate Requested Amount
     const requestedKwh = parseFloat(amountKwhToBuy);
     const availableKwh = parseFloat(listing.amount);
     if (requestedKwh > availableKwh || requestedKwh <= 0) {
-       return res.status(400).json({ error: 'Invalid purchase amount' });
+      return res.status(400).json({ error: 'Invalid purchase amount' });
     }
 
     // 4. Verify trade on-chain from frontend txHash
     try {
       const verification = await verifyTransaction(txHash, ethAmount);
       if (!verification.valid) {
-         console.error("Verification invalid:", verification.error);
-         return res.status(400).json({ error: 'Transaction verification failed: ' + verification.error });
+        console.error("Verification invalid:", verification.error);
+        return res.status(400).json({ error: 'Transaction verification failed: ' + verification.error });
       }
     } catch (blockchainErr) {
-       console.error("Blockchain verification failed", blockchainErr);
-       return res.status(500).json({ error: 'Failed to verify on-chain transaction: ' + blockchainErr.message });
+      console.error("Blockchain verification failed", blockchainErr);
+      return res.status(500).json({ error: 'Failed to verify on-chain transaction: ' + blockchainErr.message });
     }
 
     // 5. Update listing amount correctly for partial fill
@@ -187,7 +192,7 @@ export const buyListing = async (req, res) => {
     await pool.query(
       `UPDATE listings 
        SET amount = $1, status = CASE WHEN $1::numeric <= 0 THEN 'sold' ELSE 'active' END 
-       WHERE id = $2`, 
+       WHERE id = $2`,
       [newAmount, listingId]
     );
 
@@ -260,14 +265,15 @@ export const getTopTraders = async (req, res) => {
       LIMIT 5
     `;
     const result = await pool.query(query);
-    
+
     const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
     const maxVolume = result.rows.length > 0 ? parseFloat(result.rows[0].total_volume) : 1;
-    
+
     const topTraders = result.rows.map((r, i) => {
       const vol = parseFloat(r.total_volume);
       return {
         name: r.name,
+        picture: r.picture,
         color: colors[i % colors.length],
         score: Math.max(5, Math.floor((vol / maxVolume) * 100))
       };
@@ -276,6 +282,29 @@ export const getTopTraders = async (req, res) => {
     res.json({ topTraders });
   } catch (error) {
     console.error('Get top traders error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getMarketStats = async (req, res) => {
+  try {
+    const statsQuery = `
+      SELECT 
+        AVG(price_per_unit) as avg_price,
+        (SELECT COALESCE(SUM(amount_kwh), 0) FROM transactions WHERE created_at > NOW() - INTERVAL '24 hours') as volume_24h,
+        (SELECT COUNT(DISTINCT id) FROM users) as active_traders
+      FROM listings 
+    `;
+    const result = await pool.query(statsQuery);
+    const stats = result.rows[0];
+
+    res.json({
+      avgPrice: stats.avg_price ? parseFloat(stats.avg_price) : null,
+      volume24h: parseFloat(stats.volume_24h),
+      activeTraders: parseInt(stats.active_traders)
+    });
+  } catch (error) {
+    console.error('Get market stats error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

@@ -24,11 +24,11 @@ export const getEnergyReadings = async () => {
   return response.json();
 };
 
-export const createEnergyListing = async (amount, pricePerUnit) => {
+export const createEnergyListing = async (amount, pricePerUnit, type = 'sell') => {
   const response = await fetch(`${API_BASE_URL}/api/energy/listings/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, price_per_unit: pricePerUnit }),
+    body: JSON.stringify({ amount, price_per_unit: pricePerUnit, type }),
     credentials: 'include'
   });
   return response.json();
@@ -67,6 +67,13 @@ export const getRecentTrades = async () => {
 
 export const getTopTraders = async () => {
   const response = await fetch(`${API_BASE_URL}/api/energy/trades/top`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getMarketStats = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/energy/stats`, {
     credentials: 'include'
   });
   return response.json();
