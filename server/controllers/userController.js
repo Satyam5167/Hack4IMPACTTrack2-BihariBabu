@@ -3,13 +3,13 @@ import jwt from 'jsonwebtoken';
 import pool from '../utils/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax', // Use 'none' for cross-site if needed, 'lax' for local
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  secure: true, // Required for SameSite=none
+  sameSite: 'none', // Required for cross-site (Netlify -> Render)
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 export const signup = async (req, res) => {
