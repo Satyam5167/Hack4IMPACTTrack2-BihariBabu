@@ -76,6 +76,7 @@ export const login = async (req, res) => {
 
 export const googleLogin = async (req, res) => {
   const FRONTEND_URL = process.env.FRONTEND_URL || 'https://energygr1d.netlify.app';
+  // Passport-google-oauth20 attaches the user to req.user
   const user = req.user;
 
   if (!user) {
@@ -84,9 +85,10 @@ export const googleLogin = async (req, res) => {
 
   try {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    // Browsers drop cookies set on cross-site redirect responses (render.com → netlify.app).
-    // Pass token as URL param — frontend will call /api/users/auth/finalize to set the cookie properly.
-    res.redirect(`${FRONTEND_URL}/dashboard?_oat=${token}`);
+    res.cookie('token', token, cookieOptions);
+
+    // Redirect back to dashboard or home
+    res.redirect(`${FRONTEND_URL}/dashboard`);
   } catch (error) {
     console.error('Google login callback error:', error);
     res.redirect(`${FRONTEND_URL}/login?error=server_error`);
@@ -116,28 +118,6 @@ export const walletLogin = async (req, res) => {
   } catch (error) {
     console.error('Wallet login error:', error);
     res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const finalizeOAuth = async (req, res) => {
-  const { token } = req.body;
-  if (!token) return res.status(400).json({ error: 'No token provided' });
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await pool.query(
-      'SELECT id, name, email, wallet_address, picture, location FROM users WHERE id = $1',
-      [decoded.id]
-    );
-    if (user.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-
-    // Issue a fresh cookie — this is a direct fetch() call from the frontend,
-    // so SameSite=None cookies are set reliably.
-    res.cookie('token', token, cookieOptions);
-    res.json({ user: user.rows[0] });
-  } catch (err) {
-    console.error('finalizeOAuth error:', err);
-    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
