@@ -23,21 +23,26 @@ export const recordReading = async (req, res) => {
 
 export const getSurplus = async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT 
-        SUM(produced_amount) as total_produced,
-        SUM(consumed_amount) as total_consumed,
-        SUM(produced_amount - consumed_amount) as total_surplus 
-       FROM energy_readings WHERE user_id = $1`,
-      [req.userId]
-    );
+    const [readingsRes, boughtRes, soldRes, activeListingsRes] = await Promise.all([
+      pool.query('SELECT SUM(produced_amount) as p, SUM(consumed_amount) as c FROM energy_readings WHERE user_id = $1', [req.userId]),
+      pool.query('SELECT SUM(amount_kwh) as b FROM transactions WHERE buyer_id = $1', [req.userId]),
+      pool.query('SELECT SUM(amount_kwh) as s FROM transactions WHERE seller_id = $1', [req.userId]),
+      pool.query("SELECT SUM(amount) as a FROM listings WHERE user_id = $1 AND status = 'active'", [req.userId])
+    ]);
 
-    const stats = result.rows[0];
+    const produced = +(readingsRes.rows[0]?.p || 0);
+    const consumed = +(readingsRes.rows[0]?.c || 0);
+    const bought = +(boughtRes.rows[0]?.b || 0);
+    const sold = +(soldRes.rows[0]?.s || 0);
+    const locked = +(activeListingsRes.rows[0]?.a || 0);
+
+    const availableSurplus = produced - consumed + bought - sold - locked;
+
     res.json({
       user_id: req.userId,
-      produced: stats.total_produced || 0,
-      consumed: stats.total_consumed || 0,
-      surplus: stats.total_surplus || 0
+      produced,
+      consumed,
+      surplus: Math.max(0, availableSurplus)
     });
   } catch (error) {
     console.error('Get surplus error:', error);
@@ -68,21 +73,23 @@ export const createListing = async (req, res) => {
 
   try {
     // Basic verification: Check if they have surplus to list
-    const surplusResult = await pool.query(
-      'SELECT SUM(produced_amount - consumed_amount) as total_surplus FROM energy_readings WHERE user_id = $1',
-      [req.userId]
-    );
-    const currentSurplus = +(surplusResult.rows[0].total_surplus || 0);
+    const [readingsRes, boughtRes, soldRes, activeListingsRes] = await Promise.all([
+      pool.query('SELECT SUM(produced_amount) as p, SUM(consumed_amount) as c FROM energy_readings WHERE user_id = $1', [req.userId]),
+      pool.query('SELECT SUM(amount_kwh) as b FROM transactions WHERE buyer_id = $1', [req.userId]),
+      pool.query('SELECT SUM(amount_kwh) as s FROM transactions WHERE seller_id = $1', [req.userId]),
+      pool.query("SELECT SUM(amount) as a FROM listings WHERE user_id = $1 AND status = 'active'", [req.userId])
+    ]);
 
-    // Also subtract already active listings
-    const activeListingsResult = await pool.query(
-      "SELECT SUM(amount) as locked_amount FROM listings WHERE user_id = $1 AND status = 'active'",
-      [req.userId]
-    );
-    const lockedAmount = +(activeListingsResult.rows[0].locked_amount || 0);
+    const produced = +(readingsRes.rows[0]?.p || 0);
+    const consumed = +(readingsRes.rows[0]?.c || 0);
+    const bought = +(boughtRes.rows[0]?.b || 0);
+    const sold = +(soldRes.rows[0]?.s || 0);
+    const lockedAmount = +(activeListingsRes.rows[0]?.a || 0);
 
-    if (amount > (currentSurplus - lockedAmount)) {
-       return res.status(400).json({ error: `Insufficient surplus. Available: ${(currentSurplus - lockedAmount).toFixed(1)} kWh` });
+    const availableSurplus = produced - consumed + bought - sold - lockedAmount;
+
+    if (amount > availableSurplus) {
+       return res.status(400).json({ error: `Insufficient surplus. Available: ${Math.max(0, availableSurplus).toFixed(1)} kWh` });
     }
 
     const newListing = await pool.query(
@@ -215,6 +222,60 @@ export const getUserOrders = async (req, res) => {
     res.json({ orders: result.rows });
   } catch (error) {
     console.error('Get user orders error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getRecentTrades = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT t.*, 
+              b.name as buyer_name, b.picture as buyer_picture,
+              s.name as seller_name, s.picture as seller_picture
+       FROM transactions t
+       JOIN users b ON t.buyer_id = b.id
+       JOIN users s ON t.seller_id = s.id
+       ORDER BY t.created_at DESC
+       LIMIT 10`
+    );
+    res.json({ trades: result.rows });
+  } catch (error) {
+    console.error('Get recent trades error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getTopTraders = async (req, res) => {
+  try {
+    const query = `
+      SELECT u.id, u.name, u.picture,
+        COALESCE((SELECT SUM(amount_kwh) FROM transactions WHERE seller_id = u.id), 0) +
+        COALESCE((SELECT SUM(amount_kwh) FROM transactions WHERE buyer_id = u.id), 0) as total_volume
+      FROM users u
+      WHERE (
+        COALESCE((SELECT SUM(amount_kwh) FROM transactions WHERE seller_id = u.id), 0) +
+        COALESCE((SELECT SUM(amount_kwh) FROM transactions WHERE buyer_id = u.id), 0)
+      ) > 0
+      ORDER BY total_volume DESC
+      LIMIT 5
+    `;
+    const result = await pool.query(query);
+    
+    const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const maxVolume = result.rows.length > 0 ? parseFloat(result.rows[0].total_volume) : 1;
+    
+    const topTraders = result.rows.map((r, i) => {
+      const vol = parseFloat(r.total_volume);
+      return {
+        name: r.name,
+        color: colors[i % colors.length],
+        score: Math.max(5, Math.floor((vol / maxVolume) * 100))
+      };
+    });
+
+    res.json({ topTraders });
+  } catch (error) {
+    console.error('Get top traders error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

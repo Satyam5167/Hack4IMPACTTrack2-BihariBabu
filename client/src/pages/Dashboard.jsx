@@ -4,9 +4,8 @@ import ForecastChart from '../components/ForecastChart';
 import Ticker from '../components/Ticker';
 import RecordEnergyModal from '../components/RecordEnergyModal';
 import ListEnergyModal from '../components/ListEnergyModal';
-import { generateTrades, leaders } from '../data';
 import { useToast } from '../contexts/ToastContext';
-import { getEnergySurplus } from '../api';
+import { getEnergySurplus, getRecentTrades, getTopTraders } from '../api';
 
 // Animated Number Component
 function AnimatedNumber({ value, format = (v) => v.toFixed(1) }) {
@@ -22,17 +21,20 @@ function AnimatedNumber({ value, format = (v) => v.toFixed(1) }) {
   return <motion.span ref={nodeRef}>{rounded}</motion.span>;
 }
 
-const trades = generateTrades();
-
+// Remove mock trades
 export default function Dashboard() {
   const { showToast } = useToast();
   const chartRef = useRef(null);
   const [stats, setStats] = useState({ prod: 0, cons: 0, surplus: 0, co2: 284 });
   const [modalOpen, setModalOpen] = useState(false);
   const [listModalOpen, setListModalOpen] = useState(false);
+  const [recentTrades, setRecentTrades] = useState([]);
+  const [leaders, setLeaders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchRealData = async () => {
     try {
+      setLoading(true);
       const res = await getEnergySurplus();
       if (res.produced !== undefined) {
          setStats({
@@ -42,10 +44,37 @@ export default function Dashboard() {
            co2: +(+res.produced * 0.45).toFixed(1) // 0.45 kg of CO2 saved per kWh produced
          });
       }
+
+      // Fetch trades
+      const tradesRes = await getRecentTrades();
+      if (tradesRes.trades) {
+        const mappedTrades = tradesRes.trades.map(t => ({
+          time: new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          seller: t.seller_name,
+          sellerColor: '#ef4444', // Tailwind red-500 equivalent
+          buyer: t.buyer_name,
+          buyerColor: '#3b82f6', // Tailwind blue-500 equivalent
+          units: t.amount_kwh,
+          price: t.price_inr,
+          co2: (parseFloat(t.amount_kwh) * 0.45).toFixed(1),
+          hash: t.tx_hash.slice(0, 6) + '...' + t.tx_hash.slice(-4),
+          fullHash: t.tx_hash,
+          status: t.status === 'completed' || t.status === 'sold' ? 'Settled' : 'Pending'
+        }));
+        setRecentTrades(mappedTrades);
+      }
+
+      // Fetch leaders
+      const topRes = await getTopTraders();
+      if (topRes.topTraders) {
+        setLeaders(topRes.topTraders);
+      }
     } catch (e) {
-      console.error('Failed to fetch stats:', e);
+      console.error('Failed to fetch dashboard data:', e);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchRealData();
@@ -154,7 +183,7 @@ export default function Dashboard() {
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', background: c.icon }}>{s.icon}</div>
               </div>
               <div style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '6px', color: c.value }}>
-                <AnimatedNumber value={s.value} format={v => i === 3 ? Math.floor(v) : v.toFixed(1)} />
+                {loading ? <div className="skeleton" style={{ width: '80px', height: '26px' }} /> : <AnimatedNumber value={s.value} format={v => i === 3 ? Math.floor(v) : v.toFixed(1)} />}
               </div>
               <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>{s.unit}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -297,14 +326,20 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {trades.map((t, i) => (
+              {loading ? Array(5).fill(0).map((_, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid rgba(30,45,61,0.4)' }}>
+                  <td colSpan="8" style={{ padding: '10px 14px' }}>
+                    <div className="skeleton" style={{ width: '100%', height: '20px' }}></div>
+                  </td>
+                </tr>
+              )) : recentTrades.map((t, i) => (
                 <motion.tr key={i} 
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)', scale: 1.01, originX: 0 }}
                   transition={{ delay: i * 0.05, type: "spring", stiffness: 300, damping: 25 }}
                   style={{
-                  borderBottom: i === trades.length - 1 ? 'none' : '1px solid rgba(30,45,61,0.4)',
+                  borderBottom: i === recentTrades.length - 1 ? 'none' : '1px solid rgba(30,45,61,0.4)',
                 }}
                 >
                   <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--text3)' }}>{t.time}</td>
@@ -324,7 +359,7 @@ export default function Dashboard() {
                   <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green)' }}>₹{t.price}</td>
                   <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--green3)' }}>{t.co2} kg</td>
                   <td style={{ padding: '10px 14px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)', cursor: 'pointer' }}
-                    onClick={() => { navigator.clipboard?.writeText(t.hash).catch(() => { }); showToast('✓', 'TX hash copied to clipboard'); }}
+                    onClick={() => { navigator.clipboard?.writeText(t.fullHash).catch(() => { }); showToast('✓', 'TX hash copied to clipboard'); }}
                     title="Click to copy"
                   >{t.hash}</td>
                   <td style={{ padding: '10px 14px' }}>
@@ -350,7 +385,9 @@ export default function Dashboard() {
             <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontFamily: 'var(--mono)', fontWeight: 500, background: 'rgba(245,158,11,0.08)', color: 'var(--amber)', border: '1px solid rgba(245,158,11,0.2)' }}>REPUTATION</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 16px 16px' }}>
-            {leaders.map((l, i) => (
+            {loading ? Array(5).fill(0).map((_, i) => (
+              <div key={i} className="skeleton" style={{ width: '100%', height: '36px', borderRadius: '8px' }}></div>
+            )) : leaders.map((l, i) => (
               <div key={l.name} style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '8px 10px', borderRadius: '8px',

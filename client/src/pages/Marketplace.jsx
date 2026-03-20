@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import Ticker from '../components/Ticker';
 import { sellOrders, buyOrders } from '../data';
 import { useToast } from '../contexts/ToastContext';
-import { getActiveListings, buyEnergyListing } from '../api';
+import { getActiveListings, buyEnergyListing, getEnergySurplus } from '../api';
 import { getEthToInrRate, calculateEthForInr } from '../utils/currency';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../utils/contract';
@@ -35,6 +35,8 @@ export default function Marketplace() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [buyingListing, setBuyingListing] = useState(null);
   const [buyAmount, setBuyAmount] = useState('');
+  const [loadingListings, setLoadingListings] = useState(true);
+  const [userSurplus, setUserSurplus] = useState(0);
 
   useEffect(() => {
     fetchListings();
@@ -57,12 +59,22 @@ export default function Marketplace() {
 
   const fetchListings = async () => {
     try {
-      const data = await getActiveListings();
+      setLoadingListings(true);
+      const [data, surplusData] = await Promise.all([
+        getActiveListings(),
+        getEnergySurplus()
+      ]);
+      
       if (data.listings) {
         setLiveListings(data.listings);
       }
+      if (surplusData.surplus !== undefined) {
+        setUserSurplus(+surplusData.surplus);
+      }
     } catch (err) {
       console.error("Failed to fetch listings", err);
+    } finally {
+      setLoadingListings(false);
     }
   };
 
@@ -196,7 +208,7 @@ export default function Marketplace() {
             )
           },
           { label: 'Next Auction', content: <div style={{ fontFamily: 'var(--mono)', fontSize: '15px', color: 'var(--amber)' }}>{String(cd.m).padStart(2, '0')}:{String(cd.s).padStart(2, '0')}</div> },
-          { label: 'Your Surplus', content: <div style={{ fontSize: '11px', color: 'var(--text2)' }}><span style={{ color: 'var(--text)', fontWeight: 500 }}><AnimatedNumber value={3.3} /> kWh</span> available to sell</div> },
+          { label: 'Your Surplus', content: <div style={{ fontSize: '11px', color: 'var(--text2)' }}><span style={{ color: 'var(--text)', fontWeight: 500 }}>{loadingListings ? <div className="skeleton" style={{ width: '40px', height: '14px', display: 'inline-block', verticalAlign: 'middle' }} /> : <><AnimatedNumber value={userSurplus} /> kWh</>}</span> available to sell</div> },
           { label: '24h Volume', content: <div style={{ fontSize: '11px', color: 'var(--text2)' }}><span style={{ color: 'var(--text)', fontWeight: 500 }}><AnimatedNumber value={147.8} /> kWh</span> traded</div> },
           { label: 'Active Traders', content: <div style={{ fontSize: '11px', color: 'var(--text2)' }}><span style={{ color: 'var(--text)', fontWeight: 500 }}><AnimatedNumber value={12} format={v => Math.floor(v)} /></span> online now</div> },
         ].map((item, i) => (
@@ -222,7 +234,15 @@ export default function Marketplace() {
             <div style={{ background: 'var(--card)', padding: '8px 12px', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--red)', background2: 'rgba(255,75,109,0.04)' }}>↑ SELL ORDERS</div>
             <div style={{ background: 'var(--card)', padding: '8px 12px', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--green)', backgroundColor: 'rgba(0,255,135,0.04)' }}>↓ BUY ORDERS</div>
             {/* Replace static sell orders with LIVE Database Listings */}
-            {liveListings.length === 0 ? (
+            {loadingListings ? Array(5).fill(0).map((_, i) => (
+              <div key={`sk-l-${i}`} style={{ background: 'var(--card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', borderBottom: '1px solid rgba(30,45,61,0.4)', position: 'relative', overflow: 'hidden' }}>
+                 <div>
+                   <div className="skeleton" style={{ width: '40px', height: '14px', marginBottom: '4px' }}></div>
+                   <div className="skeleton" style={{ width: '60px', height: '12px' }}></div>
+                 </div>
+                 <div className="skeleton" style={{ width: '50px', height: '26px', borderRadius: '6px' }}></div>
+              </div>
+            )) : liveListings.length === 0 ? (
                <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: 'var(--text3)', fontFamily: 'var(--font)' }}>
                  No live sell offers available right now.
                </div>

@@ -29,7 +29,20 @@ export default function Orders() {
       <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 24px', fontFamily: 'var(--display)' }}>Order History</h2>
 
       {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text2)' }}>Loading history...</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {Array(4).fill(0).map((_, i) => (
+            <div key={`sk-${i}`} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+               <div>
+                  <div className="skeleton" style={{ width: '120px', height: '16px', marginBottom: '8px' }}></div>
+                  <div className="skeleton" style={{ width: '180px', height: '14px' }}></div>
+               </div>
+               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <div className="skeleton" style={{ width: '60px', height: '20px' }}></div>
+                  <div className="skeleton" style={{ width: '80px', height: '12px' }}></div>
+               </div>
+            </div>
+          ))}
+        </div>
       ) : orders.length === 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', background: 'var(--card)', borderRadius: '16px', border: '1px solid var(--border)' }}>
            <div style={{ fontSize: '32px', marginBottom: '16px' }}>📋</div>

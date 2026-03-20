@@ -80,7 +80,7 @@ export default function Navbar() {
             fontSize: '16px', boxShadow: '0 0 20px rgba(0,255,135,0.4)',
           }}>⚡</div>
           <span style={{ color: 'var(--text)' }}>EnergyGrid</span>
-          <span style={{ color: 'var(--text3)', fontWeight: 600, fontSize: '10px', padding: '2px 6px', background: 'var(--border)', borderRadius: '4px', marginLeft: '6px' }}>V2.0</span>
+          
         </div>
 
         {/* Center: Tabs */}

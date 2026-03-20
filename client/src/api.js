@@ -57,3 +57,17 @@ export const getUserOrders = async () => {
   });
   return response.json();
 };
+
+export const getRecentTrades = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/energy/trades/recent`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
+
+export const getTopTraders = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/energy/trades/top`, {
+    credentials: 'include'
+  });
+  return response.json();
+};
