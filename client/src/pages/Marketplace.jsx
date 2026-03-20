@@ -33,6 +33,8 @@ export default function Marketplace() {
   const [countdown, setCountdown] = useState(272);
   const [liveListings, setLiveListings] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [buyingListing, setBuyingListing] = useState(null);
+  const [buyAmount, setBuyAmount] = useState('');
 
   useEffect(() => {
     fetchListings();
@@ -64,19 +66,37 @@ export default function Marketplace() {
     }
   };
 
-  const handleBuyListing = async (listing) => {
+  const handleBuyListing = async (listing, amountKwhToBuy) => {
     try {
       setIsProcessing(true);
       showToast('⌛', 'Calculating ETH rate...', 'info');
       
       const ethRate = await getEthToInrRate();
-      const totalInr = parseFloat(listing.amount) * parseFloat(listing.price_per_unit);
+      const totalInr = parseFloat(amountKwhToBuy) * parseFloat(listing.price_per_unit);
       const ethNeeded = calculateEthForInr(totalInr, ethRate);
       
       if (!window.ethereum) {
         showToast('❌', 'Please install and connect MetaMask!');
         setIsProcessing(false);
         return;
+      }
+
+      // Ensure we are on Sepolia Testnet before initializing Ethers
+      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+      if (currentChainId !== '0xaa36a7') {
+        try {
+          showToast('⌛', 'Switching to Sepolia network...', 'info');
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0xaa36a7' }],
+          });
+          // Wait briefly for MetaMask to apply the switch
+          await new Promise(r => setTimeout(r, 1000));
+        } catch (error) {
+           showToast('❌', 'Please manually switch MetaMask to the Sepolia network');
+           setIsProcessing(false);
+           return;
+        }
       }
 
       showToast('⌛', 'Please confirm the MetaMask transaction...', 'info');
@@ -91,21 +111,25 @@ export default function Marketplace() {
       const tx = await contract.executeTrade(
         listing.seller_wallet,
         signer.address,
-        Math.floor(parseFloat(listing.amount)),
+        Math.floor(parseFloat(amountKwhToBuy)),
         Math.floor(parseFloat(listing.price_per_unit)),
         { value: ethers.parseEther(ethNeeded.toString()) }
       );
       
       showToast('⏳', `Processing on-chain transaction via MetaMask (~${ethNeeded} ETH)...`, 'info');
       
+      // Wait for the transaction to be fully mined before notifying the backend
+      const receipt = await tx.wait();
+      console.log("Transaction mined:", receipt);
+      
       // Notify backend to verify and record the trade
-      const res = await buyEnergyListing(listing.id, ethNeeded, tx.hash);
+      const res = await buyEnergyListing(listing.id, ethNeeded, tx.hash, amountKwhToBuy);
       
       if (res.error) {
          showToast('❌', res.error);
          return;
       }
-      showToast('✅', `Successfully purchased ${listing.amount} kWh from ${listing.seller_name}!`);
+      showToast('✅', `Successfully purchased ${amountKwhToBuy} kWh from ${listing.seller_name}!`);
       
       fetchListings(); // Refresh list
 
@@ -219,7 +243,10 @@ export default function Marketplace() {
                     </div>
                     {listing.seller_wallet && (
                        <button 
-                         onClick={() => handleBuyListing(listing)}
+                         onClick={() => {
+                           setBuyingListing(listing);
+                           setBuyAmount(listing.amount);
+                         }}
                          disabled={isProcessing}
                          style={{
                            padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--red)',
@@ -342,6 +369,78 @@ export default function Marketplace() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {buyingListing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                padding: '24px', borderRadius: '16px', width: '320px',
+                display: 'flex', flexDirection: 'column', gap: '16px', zIndex: 1001
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text)' }}>Purchase Energy</h3>
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text2)' }}>
+                Seller: {buyingListing.seller_name}<br/>
+                Available: {buyingListing.amount} kWh @ ₹{parseFloat(buyingListing.price_per_unit).toFixed(2)}/kWh
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Amount to buy (kWh)</label>
+                <input 
+                   type="number" 
+                   value={buyAmount} 
+                   onChange={e => setBuyAmount(e.target.value)}
+                   max={buyingListing.amount}
+                   min={0.1}
+                   step={0.1}
+                   style={{
+                     background: 'var(--bg3)', border: '1px solid var(--border)',
+                     padding: '10px', borderRadius: '8px', color: 'var(--text)',
+                     fontFamily: 'var(--mono)', outline: 'none'
+                   }} 
+                />
+                <div style={{ fontSize: '11px', color: 'var(--text3)' }}>
+                  Total: ₹{(parseFloat(buyAmount || 0) * parseFloat(buyingListing.price_per_unit)).toFixed(2)}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                <button 
+                  onClick={() => setBuyingListing(null)}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', cursor: 'pointer' }}
+                >Cancel</button>
+                <button 
+                  onClick={() => {
+                    const amt = parseFloat(buyAmount);
+                    if (amt > 0 && amt <= parseFloat(buyingListing.amount)) {
+                      handleBuyListing(buyingListing, amt);
+                      setBuyingListing(null);
+                    } else {
+                      showToast('❌', 'Invalid amount!');
+                    }
+                  }}
+                  disabled={isProcessing}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--green)', color: 'black', fontWeight: 'bold', cursor: 'pointer' }}
+                >{isProcessing ? 'Wait...' : 'Confirm Buy'}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Ticker />
     </motion.div>

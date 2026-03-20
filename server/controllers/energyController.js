@@ -123,10 +123,10 @@ export const getAllActiveListings = async (req, res) => {
 };
 
 export const buyListing = async (req, res) => {
-  const { listingId, ethAmount, txHash } = req.body;
+  const { listingId, ethAmount, txHash, amountKwhToBuy } = req.body;
   
-  if (!listingId || !ethAmount || !txHash) {
-    return res.status(400).json({ error: 'listingId, ethAmount, and txHash are mandatory' });
+  if (!listingId || !ethAmount || !txHash || !amountKwhToBuy) {
+    return res.status(400).json({ error: 'listingId, ethAmount, txHash, and amountKwhToBuy are mandatory' });
   }
 
   try {
@@ -156,10 +156,18 @@ export const buyListing = async (req, res) => {
        return res.status(400).json({ error: 'Please connect your wallet first' });
     }
 
+    // 3.8 Validate Requested Amount
+    const requestedKwh = parseFloat(amountKwhToBuy);
+    const availableKwh = parseFloat(listing.amount);
+    if (requestedKwh > availableKwh || requestedKwh <= 0) {
+       return res.status(400).json({ error: 'Invalid purchase amount' });
+    }
+
     // 4. Verify trade on-chain from frontend txHash
     try {
       const verification = await verifyTransaction(txHash, ethAmount);
       if (!verification.valid) {
+         console.error("Verification invalid:", verification.error);
          return res.status(400).json({ error: 'Transaction verification failed: ' + verification.error });
       }
     } catch (blockchainErr) {
@@ -167,14 +175,20 @@ export const buyListing = async (req, res) => {
        return res.status(500).json({ error: 'Failed to verify on-chain transaction: ' + blockchainErr.message });
     }
 
-    // 5. Mark listing as sold
-    await pool.query("UPDATE listings SET status = 'sold' WHERE id = $1", [listingId]);
+    // 5. Update listing amount correctly for partial fill
+    const newAmount = availableKwh - requestedKwh;
+    await pool.query(
+      `UPDATE listings 
+       SET amount = $1, status = CASE WHEN $1::numeric <= 0 THEN 'sold' ELSE 'active' END 
+       WHERE id = $2`, 
+      [newAmount, listingId]
+    );
 
     // 6. Record transaction in database
     const txRes = await pool.query(
       `INSERT INTO transactions (listing_id, buyer_id, seller_id, amount_kwh, price_inr, eth_amount, tx_hash)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [listingId, req.userId, listing.user_id, listing.amount, listing.price_per_unit, ethAmount, txHash]
+      [listingId, req.userId, listing.user_id, requestedKwh, listing.price_per_unit, ethAmount, txHash]
     );
 
     res.status(200).json({ message: 'Purchase recorded successfully', transaction: txRes.rows[0] });
@@ -182,5 +196,25 @@ export const buyListing = async (req, res) => {
   } catch (error) {
     console.error('Purchase error:', error);
     res.status(500).json({ error: 'Server error during purchase' });
+  }
+};
+
+export const getUserOrders = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT t.*, 
+              b.name as buyer_name, 
+              s.name as seller_name 
+       FROM transactions t
+       JOIN users b ON t.buyer_id = b.id
+       JOIN users s ON t.seller_id = s.id
+       WHERE t.buyer_id = $1 OR t.seller_id = $1
+       ORDER BY t.created_at DESC`,
+      [req.userId]
+    );
+    res.json({ orders: result.rows });
+  } catch (error) {
+    console.error('Get user orders error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };

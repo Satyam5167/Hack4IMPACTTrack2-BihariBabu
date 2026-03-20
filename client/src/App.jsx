@@ -10,6 +10,8 @@ import Marketplace from './pages/Marketplace';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
+import Orders from './pages/Orders';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { API_BASE_URL } from './api';
 import BackgroundCanvas from './components/BackgroundCanvas';
@@ -149,6 +151,22 @@ export default function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Marketplace />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Orders />
                 </AppLayout>
               </ProtectedRoute>
             } />

@@ -8,6 +8,7 @@ export default function Navbar() {
   const { user, logout, updateUser } = useAuth();
   const [clock, setClock] = useState('--:--:--');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -165,52 +166,57 @@ export default function Navbar() {
             </motion.button>
           )}
 
-          {/* Profile Info */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '4px 12px 4px 4px',
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: '20px', cursor: 'default',
-          }}>
-            <div style={{
-              width: '28px', height: '28px', borderRadius: '50%',
-              background: user?.picture ? `url(${user.picture}) center/cover` : 'linear-gradient(135deg, #1565c0, #42a5f5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: 'white',
-              boxShadow: '0 2px 8px rgba(21,101,192,0.3)',
-              overflow: 'hidden',
-            }}>
-              {!user?.picture && (user?.name?.slice(0, 2).toUpperCase() || '??')}
-              {user?.picture && <img src={user.picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+          {/* Profile Dropdown Area */}
+          <div style={{ position: 'relative' }}>
+            <div 
+              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '4px 12px 4px 4px',
+                background: 'var(--card)', border: profileDropdownOpen ? '1px solid var(--green)' : '1px solid var(--border)',
+                borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '50%',
+                background: user?.picture ? `url(${user.picture}) center/cover` : 'linear-gradient(135deg, #1565c0, #42a5f5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', fontWeight: 700, color: 'white',
+                boxShadow: '0 2px 8px rgba(21,101,192,0.3)',
+                overflow: 'hidden',
+              }}>
+                {!user?.picture && (user?.name?.slice(0, 2).toUpperCase() || '??')}
+                {user?.picture && <img src={user.picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              </div>
+              <span className="navbar-profile-name" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{user?.name || 'Guest'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: profileDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', marginLeft: '4px' }}>
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </div>
-            <span className="navbar-profile-name" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{user?.name || 'Guest'}</span>
+
+            <AnimatePresence>
+              {profileDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 12px)', right: 0,
+                    width: '200px', background: 'rgba(10,16,22,0.98)',
+                    backdropFilter: 'blur(12px)', border: '1px solid var(--border)',
+                    borderRadius: '12px', padding: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 101,
+                  }}
+                >
+                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='var(--card)'} onMouseOut={e => e.target.style.background='transparent'}>🧑‍💻 Profile</button>
+                  <button onClick={() => { setProfileDropdownOpen(false); navigate('/orders'); }} style={{ padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='var(--card)'} onMouseOut={e => e.target.style.background='transparent'}>📋 Order History</button>
+                  <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+                  <button onClick={() => { setProfileDropdownOpen(false); logout(); }} style={{ padding: '10px 12px', background: 'rgba(255,59,48,0.06)', border: 'none', color: 'var(--red)', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'var(--body)' }} onMouseOver={e => e.target.style.background='rgba(255,59,48,0.1)'} onMouseOut={e => e.target.style.background='rgba(255,59,48,0.06)'}>🚪 Sign Out</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          {/* Separator */}
-          <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 4px' }} />
-
-          {/* Logout Button */}
-          <motion.button 
-            onClick={logout}
-            title="Logout"
-            whileHover={{ scale: 1.05, background: 'rgba(255,59,48,0.12)' }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '36px', height: '36px',
-              background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.15)',
-              borderRadius: '10px', cursor: 'pointer',
-              color: 'var(--red)',
-              fontSize: '12px', fontWeight: 600, fontFamily: 'var(--body)',
-              transition: 'all 0.2s'
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </motion.button>
         </div>
 
         {/* Mobile: profile avatar + hamburger */}

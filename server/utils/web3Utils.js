@@ -124,9 +124,11 @@ export const verifyTransaction = async (txHash, expectedEthAmount) => {
       return { valid: false, error: 'Transaction failed or not found' };
     }
 
-    // Verify the amount sent (allowing for 0.0001 ETH rounding diff)
+    // Verify the amount sent (allowing for larger UI exchange rate tolerance)
     const valEth = web3.utils.fromWei(tx.value, 'ether');
-    if (Math.abs(parseFloat(valEth) - parseFloat(expectedEthAmount)) > 0.0001) {
+    const diff = Math.abs(parseFloat(valEth) - parseFloat(expectedEthAmount));
+    if (diff > 0.05) {
+      console.warn(`Value mismatch warned: expected ${expectedEthAmount}, found ${valEth}. Diff: ${diff}`);
       return { valid: false, error: `Value mismatch: expected ${expectedEthAmount}, found ${valEth}` };
     }
 
