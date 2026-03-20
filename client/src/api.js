@@ -41,11 +41,11 @@ export const getActiveListings = async () => {
   return response.json();
 };
 
-export const buyEnergyListing = async (listingId, ethAmount) => {
+export const buyEnergyListing = async (listingId, ethAmount, txHash) => {
   const response = await fetch(`${API_BASE_URL}/api/energy/listings/buy`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ listingId, ethAmount }),
+    body: JSON.stringify({ listingId, ethAmount, txHash }),
     credentials: 'include'
   });
   return response.json();

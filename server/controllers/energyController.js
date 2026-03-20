@@ -123,10 +123,10 @@ export const getAllActiveListings = async (req, res) => {
 };
 
 export const buyListing = async (req, res) => {
-  const { listingId, ethAmount } = req.body;
+  const { listingId, ethAmount, txHash } = req.body;
   
-  if (!listingId || !ethAmount) {
-    return res.status(400).json({ error: 'listingId and ethAmount mandatory' });
+  if (!listingId || !ethAmount || !txHash) {
+    return res.status(400).json({ error: 'listingId, ethAmount, and txHash are mandatory' });
   }
 
   try {
@@ -156,13 +156,15 @@ export const buyListing = async (req, res) => {
        return res.status(400).json({ error: 'Please connect your wallet first' });
     }
 
-    // 4. Execute trade on-chain via backend relayer
-    let txHash;
+    // 4. Verify trade on-chain from frontend txHash
     try {
-      txHash = await processTradeOnChain(sellerWallet, buyerWallet, listing.amount, listing.price_per_unit, ethAmount);
+      const verification = await verifyTransaction(txHash, ethAmount);
+      if (!verification.valid) {
+         return res.status(400).json({ error: 'Transaction verification failed: ' + verification.error });
+      }
     } catch (blockchainErr) {
-       console.error("Blockchain execution failed", blockchainErr);
-       return res.status(500).json({ error: 'Failed to process on-chain transaction: ' + blockchainErr.message });
+       console.error("Blockchain verification failed", blockchainErr);
+       return res.status(500).json({ error: 'Failed to verify on-chain transaction: ' + blockchainErr.message });
     }
 
     // 5. Mark listing as sold

@@ -5,6 +5,8 @@ import { sellOrders, buyOrders } from '../data';
 import { useToast } from '../contexts/ToastContext';
 import { getActiveListings, buyEnergyListing } from '../api';
 import { getEthToInrRate, calculateEthForInr } from '../utils/currency';
+import { ethers } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../utils/contract';
 
 // Animated Number Component
 function AnimatedNumber({ value, format = (v) => v.toFixed(1) }) {
@@ -71,10 +73,33 @@ export default function Marketplace() {
       const totalInr = parseFloat(listing.amount) * parseFloat(listing.price_per_unit);
       const ethNeeded = calculateEthForInr(totalInr, ethRate);
       
-      showToast('⏳', `Processing on-chain transaction via backend relayer (~${ethNeeded} ETH)...`, 'info');
+      if (!window.ethereum) {
+        showToast('❌', 'Please install and connect MetaMask!');
+        setIsProcessing(false);
+        return;
+      }
+
+      showToast('⌛', 'Please confirm the MetaMask transaction...', 'info');
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+      // Call executeTrade: payable, inputs: _seller, _buyer, _units, _priceINR
+      const tx = await contract.executeTrade(
+        listing.seller_wallet,
+        signer.address,
+        Math.floor(parseFloat(listing.amount)),
+        Math.floor(parseFloat(listing.price_per_unit)),
+        { value: ethers.parseEther(ethNeeded.toString()) }
+      );
       
-      // Notify backend to execute the smart contract trade
-      const res = await buyEnergyListing(listing.id, ethNeeded);
+      showToast('⏳', `Processing on-chain transaction via MetaMask (~${ethNeeded} ETH)...`, 'info');
+      
+      // Notify backend to verify and record the trade
+      const res = await buyEnergyListing(listing.id, ethNeeded, tx.hash);
       
       if (res.error) {
          showToast('❌', res.error);
@@ -85,8 +110,8 @@ export default function Marketplace() {
       fetchListings(); // Refresh list
 
     } catch (err) {
-      console.error("Backend Web3 Error:", err);
-      showToast('❌', err.message || 'Transaction failed');
+      console.error("Frontend Web3 Error:", err);
+      showToast('❌', err.shortMessage || err.message || 'Transaction failed or rejected');
     } finally {
       setIsProcessing(false);
     }
