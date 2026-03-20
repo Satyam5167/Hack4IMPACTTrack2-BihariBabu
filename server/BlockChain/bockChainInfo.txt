@@ -1,4 +1,3 @@
-
 Starting migrations...
 ======================
 > Network name:    'sepolia'
@@ -11,29 +10,29 @@ Starting migrations...
 
    Replacing 'EnergyTrade'
    -----------------------
-   > transaction hash:    0x6b0d5ef08e9f79553a9cec56c7b5bd8803d4f2ed18f9add1d82ca7286c0e9267
-   > Blocks: 2            Seconds: 19
-   > contract address:    0xF476d62796E532496e4083e3248cc5eA4A4d59EE
-   > block number:        10468941
-   > block timestamp:     1773822960
+   > transaction hash:    0x41b3cd09e398fb2c1e06d4b0f4996faeab291b439ccfc5e389e71ee6a3ec6c08
+   > Blocks: 0            Seconds: 8
+   > contract address:    0x1AF27eb775db0425E04fe4502C1bBB1bb97c62E0
+   > block number:        10483109
+   > block timestamp:     1774001160
    > account:             0xe278862745035b8b333D80Df7CBE798c4B84C174
-   > balance:             0.0473575899862919
-   > gas used:            627692 (0x993ec)
-   > gas price:           2.500000015 gwei
+   > balance:             0.0845307699862919
+   > gas used:            641341 (0x9c93d)
+   > gas price:           20 gwei
    > value sent:          0 ETH
-   > total cost:          0.00156923000941538 ETH
+   > total cost:          0.01282682 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 10468942)
-   > confirmation number: 2 (block: 10468943)
+   > confirmation number: 1 (block: 10483110)
+   > confirmation number: 2 (block: 10483111)
    > Saving artifacts
    -------------------------------------
-   > Total cost:     0.00156923000941538 ETH
+   > Total cost:          0.01282682 ETH
 
 Summary
 =======
 > Total deployments:   1
-> Final cost:          0.00156923000941538 ETH
+> Final cost:          0.01282682 ETH
 
