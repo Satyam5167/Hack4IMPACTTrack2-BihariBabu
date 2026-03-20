@@ -73,9 +73,9 @@ export default function Landing() {
       <div className="wrap">
 
         {/* NAV */}
-        <motion.nav 
-          initial={{ y: -20, opacity: 0 }} 
-          animate={{ y: 0, opacity: 1 }} 
+        <motion.nav
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
         >
           <Link to="/" className="nav-logo">

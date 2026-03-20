@@ -1,7 +1,7 @@
 import pool from '../utils/db.js';
 import fetch from 'node-fetch';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://hack4impacttrack2-biharibabu-1.onrender.com';
 
 async function geocodeLocation(locationText) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationText)}&count=1&language=en&format=json`;
@@ -62,8 +62,8 @@ export const getForecast = async (req, res) => {
     if (err.message.includes('geocode')) {
       return res.status(400).json({ error: err.message });
     }
-    if (err.code === 'ECONNREFUSED') {
-      return res.status(503).json({ error: 'AI service is not running. Please start the Python server on port 5001.' });
+    if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
+      return res.status(503).json({ error: 'AI service is unavailable. Please try again later.' });
     }
     console.error('getForecast error:', err);
     res.status(500).json({ error: 'Server error' });
