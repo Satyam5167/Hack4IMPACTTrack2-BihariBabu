@@ -1,0 +1,39 @@
+
+Starting migrations...
+======================
+> Network name:    'sepolia'
+> Network id:      11155111
+> Block gas limit: 60000000 (0x3938700)
+
+
+1_deploy_energy_trade.js
+========================
+
+   Replacing 'EnergyTrade'
+   -----------------------
+   > transaction hash:    0x6b0d5ef08e9f79553a9cec56c7b5bd8803d4f2ed18f9add1d82ca7286c0e9267
+   > Blocks: 2            Seconds: 19
+   > contract address:    0xF476d62796E532496e4083e3248cc5eA4A4d59EE
+   > block number:        10468941
+   > block timestamp:     1773822960
+   > account:             0xe278862745035b8b333D80Df7CBE798c4B84C174
+   > balance:             0.0473575899862919
+   > gas used:            627692 (0x993ec)
+   > gas price:           2.500000015 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00156923000941538 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 10468942)
+   > confirmation number: 2 (block: 10468943)
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:     0.00156923000941538 ETH
+
+Summary
+=======
+> Total deployments:   1
+> Final cost:          0.00156923000941538 ETH
+

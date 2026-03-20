@@ -1,0 +1,43 @@
+##users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name TEXT,
+  email TEXT UNIQUE,
+  password TEXT,
+  wallet_address TEXT UNIQUE,
+  google_id TEXT UNIQUE,
+  auth_provider TEXT CHECK (auth_provider IN ('email', 'google', 'wallet')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+#energy_readings table
+CREATE TABLE energy_readings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  produced_amount DECIMAL NOT NULL,
+  consumed_amount DECIMAL NOT NULL,
+  recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+#listings table
+CREATE TABLE listings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  amount DECIMAL NOT NULL,
+  price_per_unit DECIMAL NOT NULL,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'sold', 'cancelled')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+#transactions table (Payment info)
+CREATE TABLE transactions (
+  id SERIAL PRIMARY KEY,
+  listing_id INTEGER REFERENCES listings(id),
+  buyer_id INTEGER REFERENCES users(id),
+  seller_id INTEGER REFERENCES users(id),
+  amount_kwh DECIMAL NOT NULL,
+  price_inr DECIMAL NOT NULL,
+  eth_amount DECIMAL NOT NULL,
+  tx_hash TEXT UNIQUE NOT NULL,
+  status TEXT DEFAULT 'completed',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

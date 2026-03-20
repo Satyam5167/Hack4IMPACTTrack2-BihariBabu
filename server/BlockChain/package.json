@@ -1,0 +1,11 @@
+{
+  "name": "energy-grid-blockchain",
+  "version": "1.0.0",
+  "description": "Truffle project for EnergyGrid",
+  "type": "commonjs",
+  "private": true,
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "dotenv": "^17.3.1"
+  }
+}

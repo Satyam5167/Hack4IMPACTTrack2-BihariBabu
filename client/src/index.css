@@ -1,0 +1,606 @@
+@import "tailwindcss";
+
+/* ── Global Unified Design Tokens ── */
+:root {
+  --bg: #03080e;
+  --bg2: #060d15;
+  --card: #0a1520;
+  --card2: #0d1c2e;
+  --border: #0f2035;
+  --border2: #173050;
+  --green: #00ff87;
+  --green2: #00c96b;
+  --green3: #00ffb3;
+  --teal: #00e5cc;
+  --blue: #0ea5e9;
+  --amber: #f59e0b;
+  --red: #ff4d6d;
+  --purple: #b388ff;
+  --text: #e2f0ff;
+  --text2: #5e8aaa;
+  --text3: #1e3a52;
+  --display: 'Syne', sans-serif;
+  --body: 'DM Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none !important;
+}
+
+a, button, input {
+  cursor: none !important;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 2px;
+}
+
+/* Grid lines overlay */
+@keyframes grid-pan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(48px); }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -100px;
+  background-image:
+    linear-gradient(rgba(0, 255, 135, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 135, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+  animation: grid-pan 15s linear infinite;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 10%, rgba(0,0,0,0) 100%);
+}
+
+/* Noise overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes blink-green {
+
+  0%,
+  100% {
+    color: var(--green);
+  }
+
+  50% {
+    color: #fff;
+    text-shadow: 0 0 12px var(--green);
+  }
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.ticker-track {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  animation: scroll-left 25s linear infinite;
+  white-space: nowrap;
+  padding: 0 16px;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.stat-card {
+  animation: fade-up .5s ease forwards;
+  opacity: 0;
+}
+
+.stat-card:nth-child(1) {
+  animation-delay: .05s;
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: .10s;
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: .15s;
+}
+
+.stat-card:nth-child(4) {
+  animation-delay: .20s;
+}
+
+.trade-table tbody tr {
+  animation: row-in 0.4s ease forwards;
+  opacity: 0;
+}
+
+.price-blink {
+  animation: blink-green 1s ease;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all .3s;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ══════════════════════════════════════════════
+   LANDING PAGE STYLES
+   ══════════════════════════════════════════════ */
+
+.lp-root {
+  --lp-bg: #03080e;
+  --lp-bg2: #060d15;
+  --lp-card: #0a1520;
+  --lp-border: #0f2035;
+  --lp-border2: #173050;
+  --lp-green: #00ff87;
+  --lp-green2: #00c96b;
+  --lp-green3: #00ffb3;
+  --lp-teal: #00e5cc;
+  --lp-blue: #0ea5e9;
+  --lp-amber: #f59e0b;
+  --lp-text: #e2f0ff;
+  --lp-text2: #5e8aaa;
+  --lp-text3: #1e3a52;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Grid lines overlay */
+.lp-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 135, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 135, 0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Noise overlay */
+.lp-root::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ── LandingScroll reveal ── */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+
+.lp-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Shimmer on gradient text ── */
+@keyframes lp-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.lp-title-gradient {
+  background: linear-gradient(90deg, #00ff87, #00e5cc, #00ffb3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: lp-shimmer 4s ease-in-out infinite;
+  background-size: 200%;
+}
+
+/* ── Eyebrow dot pulse ── */
+@keyframes lp-pulse-g {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(0, 255, 135, 0);
+  }
+}
+
+.lp-eyebrow-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff87;
+  animation: lp-pulse-g 2s ease-in-out infinite;
+}
+
+/* ── Floating hero cards ── */
+@keyframes lp-float-y {
+  0%,100% { transform: translateY(0) rotate(var(--rot,0deg)); }
+  50% { transform: translateY(-12px) rotate(var(--rot,0deg)); }
+}
+
+@keyframes lp-pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes lp-feed-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lp-float {
+  position: absolute;
+  pointer-events: none;
+  animation: lp-float-y 6s ease-in-out infinite;
+}
+
+.lp-float-1 {
+  top: 18%;
+  left: 5%;
+  animation-delay: 0s;
+  --rot: -3deg;
+}
+
+.lp-float-2 {
+  top: 25%;
+  right: 4%;
+  animation-delay: 1.5s;
+  --rot: 4deg;
+}
+
+.lp-float-3 {
+  bottom: 20%;
+  left: 7%;
+  animation-delay: 3s;
+  --rot: -2deg;
+}
+
+/* ── Sparkline bars ── */
+.bar-spark {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  background: rgba(0, 255, 135, 0.25);
+  transition: height .3s;
+}
+
+.bar-spark.hi {
+  background: rgba(0, 255, 135, 0.6);
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN PAGE STYLES
+   ══════════════════════════════════════════════ */
+
+.login-page-root {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: #03080e;
+  color: #e2f0ff;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Grid overlay for login */
+.login-page-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 135, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 135, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Login page animations */
+@keyframes lp-feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-feed-item {
+  animation: lp-feed-in .4s ease both;
+}
+
+@keyframes lp-pulse-feed {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px rgba(0, 255, 135, 0);
+  }
+}
+
+.lp-feed-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00ff87;
+  display: inline-block;
+  animation: lp-pulse-feed 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes lp-pop-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lp-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 26, 10, 0.3);
+  border-top-color: #001a0a;
+  border-radius: 50%;
+  animation: lp-spin .6s linear infinite;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — DASHBOARD & MARKETPLACE
+   ══════════════════════════════════════════════ */
+
+/* --- Responsive grid helpers (these override inline styles via className) --- */
+.dash-grid-4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.dash-grid-2  { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+.dash-grid-bottom { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+.market-grid  { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+.market-bar   { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+/* Trade table — always scrollable on parent */
+.trade-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.trade-table      { min-width: 600px; }
+
+/* ────────────────────────
+   ≤ 1200px  (large tablet)
+   ──────────────────────── */
+@media (max-width: 1200px) {
+  .dash-grid-4    { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ────────────────────────
+   ≤ 960px  (tablet)
+   ──────────────────────── */
+@media (max-width: 960px) {
+  .dash-grid-2    { grid-template-columns: 1fr; }
+  .dash-grid-bottom { grid-template-columns: 1fr; }
+  .market-grid    { grid-template-columns: 1fr; }
+}
+
+/* ────────────────────────
+   ≤ 768px  (large phone)
+   ──────────────────────── */
+@media (max-width: 768px) {
+  /* --- Page padding --- */
+  .page-pad { padding: 14px 14px !important; }
+
+  /* --- Navbar (class-based hiding) --- */
+  .navbar-tabs        { display: none !important; }
+  .navbar-right-full  { display: none !important; }
+  .navbar-mobile-menu { display: flex !important; }
+
+  /* --- Dashboard stat cards — 2 col --- */
+  .dash-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* --- Market bar: wrap items into a 2×col mini-grid --- */
+  .market-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  /* Hide the vertical pipe separators inside market-bar on mobile */
+  .market-bar > div > div:first-child[style*="width: 1px"] { display: none; }
+
+  /* --- Marketplace order book: stack sell/buy vertically --- */
+  .order-book-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Hide the spread row spans correctly on 1-col */
+  .order-book-spread {
+    grid-column: 1 !important;
+  }
+}
+
+/* ────────────────────────
+   ≤ 480px  (small phone)
+   ──────────────────────── */
+@media (max-width: 480px) {
+  /* --- Stat cards: single column --- */
+  .dash-grid-4 { grid-template-columns: 1fr; }
+
+  /* --- Market bar: single column --- */
+  .market-bar { grid-template-columns: 1fr; }
+
+  /* --- Stat card internals --- */
+  .stat-card { padding: 14px 16px !important; }
+
+  /* --- Market bar item separators — hide on mobile --- */
+  .market-bar-sep { display: none; }
+
+  /* --- Dashboard mid panel pool gauge: shrink gauge --- */
+  .pool-gauge-svg { width: 110px !important; height: 66px !important; }
+
+  /* --- Fonts: slightly larger for readability --- */
+  .page-pad .trade-table td,
+  .page-pad .trade-table th { padding: 8px 10px !important; font-size: 11px !important; }
+}
+
+/* Ticker — always full width, no overflow issues */
+.ticker-wrap { overflow: hidden; width: 100%; }
+ 
+/* --- Dashboard Header & Button Responsiveness --- */
+@media (max-width: 640px) {
+  .dash-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+  
+  .dash-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100%;
+    gap: 10px !important;
+  }
+
+  .dash-header-actions button {
+    justify-content: center !important;
+    padding: 12px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .dash-header-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
