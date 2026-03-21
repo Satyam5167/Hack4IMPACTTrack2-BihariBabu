@@ -128,8 +128,7 @@ export default function Signup() {
       const response = await fetch(`${API_BASE_URL}/api/users/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password: pwd }),
-        credentials: 'include'
+        body: JSON.stringify({ name, email, password: pwd })
       });
 
       const data = await response.json();
@@ -138,7 +137,7 @@ export default function Signup() {
         throw new Error(data.error || 'Signup failed');
       }
 
-      login(data.user);
+      login(data.user, data.token);
       showSuccess();
     } catch (err) {
       showError(err.message);
@@ -165,14 +164,13 @@ export default function Signup() {
       const response = await fetch(`${API_BASE_URL}/api/users/wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet_address: address }),
-        credentials: 'include'
+        body: JSON.stringify({ wallet_address: address })
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Wallet registration failed');
 
-      login(data.user);
+      login(data.user, data.token);
       showSuccess();
     } catch (err) {
       showError(err.message);

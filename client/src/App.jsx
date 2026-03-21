@@ -35,13 +35,33 @@ function AuthProvider({ children }) {
 
   useEffect(() => {
     async function checkAuth() {
+      // Check for token in URL first (Google OAuth callback)
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token');
+      if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        // Clear query param from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-          credentials: 'include'
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
         const data = await response.json();
         if (response.ok) {
           setUser(data.user);
+        } else {
+          // Token might be invalid
+          localStorage.removeItem('token');
         }
       } catch (err) {
         console.error('Auth check failed:', err);
@@ -52,7 +72,8 @@ function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
+    if (token) localStorage.setItem('token', token);
     setUser(userData);
   };
 
@@ -62,10 +83,7 @@ function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/api/users/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      localStorage.removeItem('token');
       setUser(null);
       showToast('⚡', 'Logged out successfully');
       navigate('/login');

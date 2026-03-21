@@ -4,13 +4,6 @@ import pool from '../utils/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: true, // Required for SameSite=none
-  sameSite: 'none', // Required for cross-site (Netlify -> Render)
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
-
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -32,10 +25,7 @@ export const signup = async (req, res) => {
 
     const token = jwt.sign({ id: newUser.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
 
-    // Set cookie
-    res.cookie('token', token, cookieOptions);
-
-    res.status(201).json({ user: newUser.rows[0] });
+    res.status(201).json({ user: newUser.rows[0], token });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -62,11 +52,9 @@ export const login = async (req, res) => {
 
     const token = jwt.sign({ id: user.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
 
-    // Set cookie
-    res.cookie('token', token, cookieOptions);
-
     res.json({
-      user: { id: user.rows[0].id, name: user.rows[0].name, email: user.rows[0].email }
+      user: { id: user.rows[0].id, name: user.rows[0].name, email: user.rows[0].email },
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -85,7 +73,9 @@ export const googleLogin = async (req, res) => {
 
   try {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, cookieOptions);
+    
+    // Pass token via query param for SPA to pick up
+    res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`);
 
     // Redirect back to dashboard or home
     res.redirect(`${FRONTEND_URL}/dashboard`);
@@ -113,8 +103,7 @@ export const walletLogin = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, cookieOptions);
-    res.json({ user: user.rows[0] });
+    res.json({ user: user.rows[0], token });
   } catch (error) {
     console.error('Wallet login error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -190,7 +179,6 @@ export const upsertSolarPanel = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('token');
   res.json({ success: true });
 };
 
