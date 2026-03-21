@@ -10,8 +10,12 @@ export default function RecordEnergyModal({ isOpen, onClose, onFinish }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.produced || !formData.consumed) {
+    if (formData.produced === '' || formData.consumed === '') {
       return showToast('❌', 'Please enter both values');
+    }
+
+    if (+formData.produced < 0 || +formData.consumed < 0) {
+      return showToast('❌', 'Amounts cannot be negative');
     }
 
     setLoading(true);
@@ -70,7 +74,7 @@ export default function RecordEnergyModal({ isOpen, onClose, onFinish }) {
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--text2)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Produced (kWh)</label>
                 <input 
-                  type="number" step="0.1"
+                  type="number" step="0.1" min="0"
                   value={formData.produced}
                   onChange={(e) => setFormData(p => ({ ...p, produced: e.target.value }))}
                   placeholder="e.g. 12.5"
@@ -86,7 +90,7 @@ export default function RecordEnergyModal({ isOpen, onClose, onFinish }) {
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--text2)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Consumed (kWh)</label>
                 <input 
-                  type="number" step="0.1"
+                  type="number" step="0.1" min="0"
                   value={formData.consumed}
                   onChange={(e) => setFormData(p => ({ ...p, consumed: e.target.value }))}
                   placeholder="e.g. 5.2"

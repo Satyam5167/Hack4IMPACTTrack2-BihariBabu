@@ -8,6 +8,10 @@ export const recordReading = async (req, res) => {
     return res.status(400).json({ error: 'Produced and consumed amounts are required' });
   }
 
+  if (produced_amount < 0 || consumed_amount < 0) {
+    return res.status(400).json({ error: 'Amounts cannot be negative' });
+  }
+
   try {
     const newReading = await pool.query(
       'INSERT INTO energy_readings (user_id, produced_amount, consumed_amount) VALUES ($1, $2, $3) RETURNING *',
@@ -67,8 +71,12 @@ export const getReadings = async (req, res) => {
 export const createListing = async (req, res) => {
   const { amount, price_per_unit, type = 'sell' } = req.body;
 
-  if (!amount || !price_per_unit) {
+  if (amount === undefined || price_per_unit === undefined) {
     return res.status(400).json({ error: 'Amount and price are required' });
+  }
+
+  if (amount <= 0 || price_per_unit <= 0) {
+    return res.status(400).json({ error: 'Amount and price must be greater than zero' });
   }
 
   try {

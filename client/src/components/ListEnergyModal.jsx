@@ -10,8 +10,12 @@ export default function ListEnergyModal({ isOpen, onClose, maxSurplus, onFinish 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.amount || !formData.price) {
+    if (formData.amount === '' || formData.price === '') {
       return showToast('❌', 'Please enter both amount and price');
+    }
+
+    if (+formData.amount <= 0 || +formData.price <= 0) {
+      return showToast('❌', 'Amount and price must be greater than zero');
     }
 
     if (+formData.amount > maxSurplus) {
@@ -78,7 +82,7 @@ export default function ListEnergyModal({ isOpen, onClose, maxSurplus, onFinish 
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--text2)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Amount to Sell (kWh)</label>
                 <input 
-                  type="number" step="0.1"
+                  type="number" step="0.1" min="0"
                   value={formData.amount}
                   onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}
                   placeholder="e.g. 2.0"
@@ -94,7 +98,7 @@ export default function ListEnergyModal({ isOpen, onClose, maxSurplus, onFinish 
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--text2)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Price per Unit (₹)</label>
                 <input 
-                  type="number" step="0.1"
+                  type="number" step="0.1" min="0"
                   value={formData.price}
                   onChange={(e) => setFormData(p => ({ ...p, price: e.target.value }))}
                   placeholder="e.g. 4.5"

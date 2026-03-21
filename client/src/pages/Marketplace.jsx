@@ -180,8 +180,8 @@ export default function Marketplace() {
   const placeOrder = async () => {
     const units = parseFloat(orderUnits);
     const price = parseFloat(orderPrice);
-    if (!units || !price) {
-      showToast('⚠', 'Please enter units and price');
+    if (!units || !price || units <= 0) {
+      showToast('⚠', 'Please enter valid positive units and price');
       return;
     }
     if (price < 2 || price > 15) {
@@ -480,7 +480,7 @@ export default function Marketplace() {
             {/* Units */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Units (kWh)</label>
-              <input type="number" value={orderUnits} onChange={e => handleUnitsChange(e.target.value)} placeholder="0.00" step="0.1" style={{
+              <input type="number" value={orderUnits} onChange={e => handleUnitsChange(e.target.value)} placeholder="0.00" step="0.1" min="0.1" style={{
                 background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px',
                 padding: '9px 12px', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '13px',
                 outline: 'none', width: '100%',
@@ -494,7 +494,7 @@ export default function Marketplace() {
             {/* Price */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Price (₹ / kWh)</label>
-              <input type="number" value={orderPrice} onChange={e => setOrderPrice(e.target.value)} placeholder="6.50" step="0.10" style={{
+              <input type="number" value={orderPrice} onChange={e => setOrderPrice(e.target.value)} placeholder="6.50" step="0.10" min="2" max="15" style={{
                 background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px',
                 padding: '9px 12px', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '13px',
                 outline: 'none', width: '100%',
