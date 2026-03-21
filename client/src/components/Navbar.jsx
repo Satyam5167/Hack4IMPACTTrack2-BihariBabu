@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../App';
-import { API_BASE_URL } from '../apiBase';
+import { API_BASE_URL, getToken } from '../apiBase';
 import { Zap, User, ClipboardList, LogOut } from 'lucide-react';
 
 export default function Navbar() {
@@ -34,10 +34,13 @@ export default function Navbar() {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const account = accounts[0];
 
+      const token = getToken();
       const response = await fetch(`${API_BASE_URL}/api/users/wallet/link`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ wallet_address: account })
       });
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import Ticker from '../components/Ticker';
 import { sellOrders, buyOrders } from '../data';
 import { useToast } from '../contexts/ToastContext';
-import { getActiveListings, buyEnergyListing, getEnergySurplus, createEnergyListing, getMarketStats } from '../api';
+import { getActiveListings, buyEnergyListing, getEnergySurplus, createEnergyListing, getMarketStats, getRecentTrades } from '../api';
 import { API_BASE_URL } from '../apiBase';
 import { getEthToInrRate, calculateEthForInr } from '../utils/currency';
 import { ethers } from 'ethers';
@@ -53,9 +53,8 @@ export default function Marketplace() {
 
   const fetchTrades = async () => {
     try {
-       const res = await fetch(`${API_BASE_URL}/api/energy/trades/recent`, { credentials: 'include' });
-       const data = await res.json();
-       if (data.trades) setRecentTrades(data.trades);
+       const res = await getRecentTrades();
+       if (res.trades) setRecentTrades(res.trades);
     } catch (err) {
        console.error("Failed to fetch trades", err);
     }
